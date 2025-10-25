@@ -1,6 +1,7 @@
 # model/dataset/util.py
 import functools
 import numpy as np
+from transformers import TrainerCallback
 from datasets import load_dataset, Dataset, concatenate_datasets
 from typing import List, Tuple, Optional
 
@@ -181,3 +182,19 @@ def permute(
         new_sample = sample
 
     return list(new_sample), np_rng
+
+
+class PerplexityCallback(TrainerCallback):
+    def on_evaluate(self, args, state, control, **kwargs):
+        if state.log_history and "eval_loss" in state.log_history[-1]:
+            eval_loss = state.log_history[-1]["eval_loss"]
+            ppl = math.exp(eval_loss) if eval_loss < 20 else float("inf")
+            print(f"\n>>> Epoch {int(state.epoch) if state.epoch is not None else '?'} | "
+                  f"eval_loss={eval_loss:.4f} | perplexity={ppl:.3f}\n")
+            
+class EpochToDatasetCallback(TrainerCallback):
+    def __init__(self, dset):
+        self.dset = dset
+    def on_epoch_begin(self, args, state, control, **kwargs):
+        if hasattr(self.dset, "set_epoch"):
+            self.dset.set_epoch(state.epoch)
