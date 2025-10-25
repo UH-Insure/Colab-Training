@@ -1,5 +1,5 @@
 # model/dataset/util.py
-import functools
+import functools, math
 import numpy as np
 from transformers import TrainerCallback
 from datasets import load_dataset, Dataset, concatenate_datasets
