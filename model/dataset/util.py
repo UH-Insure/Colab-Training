@@ -2,18 +2,38 @@
 import functools
 import numpy as np
 
+FIM_PREFIX_TOK = "<|fim_prefix|>"
+FIM_MIDDLE_TOK = "<|fim_middle|>"
+FIM_SUFFIX_TOK = "<|fim_suffix|>"
+FIM_PAD_TOK    = "<|fim_pad|>"
 
-# Helper function to get token ids of the special tokens for prefix, suffix and middle for FIM transformations.
 @functools.lru_cache(maxsize=None)
 def get_fim_token_ids(tokenizer):
-    try:
-        FIM_PREFIX, FIM_MIDDLE, FIM_SUFFIX, FIM_PAD = tokenizer.special_tokens_map["additional_special_tokens"][1:5]
-        suffix_tok_id, prefix_tok_id, middle_tok_id, pad_tok_id = (
-            tokenizer.vocab[tok] for tok in [FIM_SUFFIX, FIM_PREFIX, FIM_MIDDLE, FIM_PAD]
-        )
-    except KeyError:
-        suffix_tok_id, prefix_tok_id, middle_tok_id, pad_tok_id = None, None, None, None
-    return suffix_tok_id, prefix_tok_id, middle_tok_id, pad_tok_id
+    # 1) Try to resolve ids by name
+    ids = {
+        "prefix": tokenizer.convert_tokens_to_ids(FIM_PREFIX_TOK),
+        "middle": tokenizer.convert_tokens_to_ids(FIM_MIDDLE_TOK),
+        "suffix": tokenizer.convert_tokens_to_ids(FIM_SUFFIX_TOK),
+        "pad":    tokenizer.convert_tokens_to_ids(FIM_PAD_TOK),
+    }
+
+    # 2) If any are missing, attempt to register them as *special* tokens (harmless if they already exist)
+    missing = [tok for tok, tid in zip(
+        [FIM_PREFIX_TOK, FIM_MIDDLE_TOK, FIM_SUFFIX_TOK, FIM_PAD_TOK],
+        [ids["prefix"],  ids["middle"],  ids["suffix"],  ids["pad"]]
+    ) if tid is None or tid == tokenizer.unk_token_id]
+
+    if missing:
+        tokenizer.add_special_tokens({"additional_special_tokens": missing})
+        # refresh ids after add
+        ids = {
+            "prefix": tokenizer.convert_tokens_to_ids(FIM_PREFIX_TOK),
+            "middle": tokenizer.convert_tokens_to_ids(FIM_MIDDLE_TOK),
+            "suffix": tokenizer.convert_tokens_to_ids(FIM_SUFFIX_TOK),
+            "pad":    tokenizer.convert_tokens_to_ids(FIM_PAD_TOK),
+        }
+
+    return ids["suffix"], ids["prefix"], ids["middle"], ids["pad"]
 
 
 ## Adapted from https://github.com/bigcode-project/Megatron-LM/blob/6c4bf908df8fd86b4977f54bf5b8bd4b521003d1/megatron/data/gpt_dataset.py
