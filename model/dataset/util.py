@@ -183,39 +183,19 @@ def permute(
 
     return list(new_sample), np_rng
 
-try:
-    import wandb
-    _WANDB_OK = True
-except Exception:
-    _WANDB_OK = False
 
 class PerplexityCallback(TrainerCallback):
     def on_evaluate(self, args, state, control, metrics=None, **kwargs):
-        # Prefer the metrics dict; fall back to state.log_history (your original behavior)
+        import math, wandb
         if metrics and "eval_loss" in metrics:
             eval_loss = float(metrics["eval_loss"])
-        elif state.log_history and "eval_loss" in state.log_history[-1]:
-            eval_loss = float(state.log_history[-1]["eval_loss"])
-        else:
-            return  # nothing to log
-
-        ppl = math.exp(eval_loss) if eval_loss < 20 else float("inf")
-        epoch_str = str(int(state.epoch)) if state.epoch is not None else "?"
-
-        # console print (unchanged)
-        print(f"\n>>> Epoch {epoch_str} | eval_loss={eval_loss:.4f} | perplexity={ppl:.3f}\n")
-
-        # log to W&B (only if a run is active)
-        if _WANDB_OK and getattr(wandb, "run", None) is not None:
-            wandb.log(
-                {
-                    "eval/loss": eval_loss,
-                    "eval/perplexity": ppl,
-                    "train/epoch": state.epoch,
-                    "train/global_step": state.global_step,
-                },
-                step=state.global_step,
-            )
+            ppl = math.exp(eval_loss) if eval_loss < 20 else float("inf")
+            wandb.log({
+                "train/global_step": state.global_step,   # <-- drive the x-axis
+                "eval/loss": eval_loss,
+                "eval/perplexity": ppl,
+                "train/epoch": state.epoch,
+            })
             
 class EpochToDatasetCallback(TrainerCallback):
     def __init__(self, dset):
