@@ -55,37 +55,16 @@ class ConstantLengthDataset(IterableDataset):
         self.overlap_ratio = overlap_ratio
         self.shuffle = shuffle
         self.epoch = epoch
-
-        (
-            self.suffix_tok_id,
+        (   self.suffix_tok_id,
             self.prefix_tok_id,
             self.middle_tok_id,
-            self.pad_tok_id,
-        ) = get_fim_token_ids(self.tokenizer)
-        if not self.suffix_tok_id and self.fim_rate > 0:
-            print("FIM is not supported by tokenizer, disabling FIM")
-            self.fim_rate = 0
-
+            self.pad_tok_id,) = get_fim_token_ids(self.tokenizer)
+        if any(tid is None for tid in (self.suffix_tok_id, self.prefix_tok_id, self.middle_tok_id)):
+            if self.fim_rate > 0:
+                print("[INFO] FIM tokens not available; disabling FIM.")
+            self.fim_rate = 0.0
         self._length = self._estimate_length()
-            
-    # def _estimate_length(self):
-    #     total_tokens = 0
-
-    #     if self.already_tokenized:
-    #         for example in self.dataset:
-    #             total_tokens += len(example[self.content_field])
-
-    #     else:
-    #         for example in self.dataset:
-    #             total_tokens += len(example[self.content_field])
-
-    #     stride = int(self.seq_length * (1 - self.overlap_ratio))
-    #     stride = max(1, stride)
-    #     n_chunks = max(1, (total_tokens - self.seq_length) // stride + 1)
-    #     return n_chunks
-
-    # def __len__(self):
-    #     return self._length
+        
 
     def _estimate_length(self):
         """Estimate (and optionally measure) dataset length accurately once."""
