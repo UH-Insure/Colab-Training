@@ -1,6 +1,9 @@
 # model/dataset/util.py
 import functools
 import numpy as np
+from datasets import load_dataset, Dataset, concatenate_datasets
+from typing import List, Tuple, Optional
+
 
 FIM_PREFIX_TOK = "<|fim_prefix|>"
 FIM_MIDDLE_TOK = "<|fim_middle|>"
@@ -35,6 +38,75 @@ def get_fim_token_ids(tokenizer):
 
     return ids["suffix"], ids["prefix"], ids["middle"], ids["pad"]
 
+def chars_token_ratio(dataset, tokenizer, data_column, nb_examples=400, batch_size=64):
+    """
+    Estimate average chars per token using token counts (works for slow & fast tokenizers).
+    """
+    n = min(nb_examples, len(dataset))
+    if n == 0:
+        return float("nan")
+
+    total_chars = 0
+    total_tokens = 0
+
+    for start in range(0, n, batch_size):
+        end = min(start + batch_size, n)
+        texts = [dataset[i][data_column] for i in range(start, end)]
+        total_chars += sum(len(t) for t in texts)
+
+        enc = tokenizer(
+            texts,
+            add_special_tokens=False,   # don't inflate with BOS/EOS/etc.
+            truncation=False,           # we want true token lengths
+            return_attention_mask=False,
+            return_token_type_ids=False,
+        )
+        # enc["input_ids"] is a list of lists
+        total_tokens += sum(len(ids) for ids in enc["input_ids"])
+
+    return total_chars / max(total_tokens, 1)
+
+def split_by_filetype(
+        dataset_path: str,
+    seed: int = 42,
+    test_size: float = 0.10,
+    filetypes: Optional[List[str]] = None,
+) -> Tuple[Dataset, Dataset]:
+    """
+    Load a JSON/JSONL dataset and return (train_ds, eval_ds) using the logic:
+      - select rows where x["set"] == "unsupervised"
+      - split each requested filetype independently with the same seed/test_size
+      - concatenate the per-type train splits into train_ds
+      - concatenate the per-type test splits into eval_ds
+    """
+    if filetypes is None:
+        filetypes = ["cry", "saw", "txt"]
+
+    # Matches your pattern: {"data": DATASET} then index ["data"]
+    dataset = load_dataset("json", data_files={"data": dataset_path})["data"]
+
+    # Keep only the unsupervised subset
+    unsupervised = dataset.filter(lambda x: x.get("set") == "unsupervised")
+
+    train_parts, eval_parts = [], []
+    for ft in filetypes:
+        subset = unsupervised.filter(lambda x, f=ft: x.get("filetype") == f)
+        if len(subset) == 0:
+            # If a type is absent, skip it gracefully
+            continue
+        split = subset.train_test_split(test_size=test_size, seed=seed, shuffle=True)
+        train_parts.append(split["train"])
+        eval_parts.append(split["test"])
+
+    if not train_parts or not eval_parts:
+        raise ValueError(
+            "No data found for the specified filetypes under set=='unsupervised'. "
+            "Check your dataset 'set' and 'filetype' fields."
+        )
+
+    train_ds = concatenate_datasets(train_parts) if len(train_parts) > 1 else train_parts[0]
+    eval_ds  = concatenate_datasets(eval_parts)  if len(eval_parts)  > 1 else eval_parts[0]
+    return train_ds, eval_ds
 
 ## Adapted from https://github.com/bigcode-project/Megatron-LM/blob/6c4bf908df8fd86b4977f54bf5b8bd4b521003d1/megatron/data/gpt_dataset.py
 def permute(
