@@ -71,6 +71,7 @@ def split_by_filetype(
         dataset_path: str,
     seed: int = 42,
     test_size: float = 0.10,
+    set: str = "supervised",
     filetypes: Optional[List[str]] = None,
 ) -> Tuple[Dataset, Dataset]:
     """
@@ -81,17 +82,17 @@ def split_by_filetype(
       - concatenate the per-type test splits into eval_ds
     """
     if filetypes is None:
-        filetypes = ["cry", "saw", "txt"]
+        filetypes = ["cryptol", "saw", "text"]
 
     # Matches your pattern: {"data": DATASET} then index ["data"]
     dataset = load_dataset("json", data_files={"data": dataset_path})["data"]
 
     # Keep only the unsupervised subset
-    unsupervised = dataset.filter(lambda x: x.get("set") == "unsupervised")
+    training_set = dataset.filter(lambda x: x.get("set") == set)
 
     train_parts, eval_parts = [], []
     for ft in filetypes:
-        subset = unsupervised.filter(lambda x, f=ft: x.get("filetype") == f)
+        subset = training_set.filter(lambda x, f=ft: x.get("filetype") == f)
         if len(subset) == 0:
             # If a type is absent, skip it gracefully
             continue
