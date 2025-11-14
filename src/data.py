@@ -2,20 +2,20 @@ from copy import deepcopy
 from datasets import Dataset, load_dataset
 from typing import List, Dict, Any
 
-def _chunk_messages_by_tokens(messages, tokenizer, max_len: int):
+SKIPPED_FILES = set()
+
+def _chunk_messages_by_tokens(messages, tokenizer, max_len: int, source_name: str | None = None):
     """
     Split a single conversation (list of {role, content}) into a list of
-    shorter conversations, each of which tokenizes to <= max_len tokens
-    under tokenizer.apply_chat_template(..., add_generation_prompt=True).
+    shorter conversations, each of which tokenizes to <= max_len tokens.
 
-    We always keep messages contiguous and in order; if adding the next
-    message would push us over max_len, we start a new chunk.
+    If a single message is itself > max_len tokens, we skip it and log
+    its token length and (optionally) the source_name (e.g., filename).
     """
     chunks = []
     current = []
 
     def tokens_for(msgs):
-        # Use chat_template exactly like training (generation prompt on)
         ids = tokenizer.apply_chat_template(
             msgs,
             tokenize=True,
@@ -23,6 +23,13 @@ def _chunk_messages_by_tokens(messages, tokenizer, max_len: int):
             truncation=False,   # we want the true length
         )
         return len(ids)
+
+    def log_skip(n_tokens: int):
+        msg = f"Skipping over-long single message with {n_tokens} tokens"
+        if source_name is not None:
+            msg += f" from {source_name}"
+            SKIPPED_FILES.add(source_name)
+        print(msg)
 
     for msg in messages:
         tentative = current + [msg]
@@ -35,22 +42,19 @@ def _chunk_messages_by_tokens(messages, tokenizer, max_len: int):
             # Current chunk is full -> flush it if non-empty
             if current:
                 chunks.append(current)
-                # Start a new chunk with this message (if it fits alone)
-                if tokens_for([msg]) <= max_len:
+                single_len = tokens_for([msg])
+                if single_len <= max_len:
                     current = [msg]
                 else:
-                    # Single message itself too long; skip it completely
-                    # (you could instead hard-truncate at token level if needed)
-                    print("Skipping over-long single message with",
-                          tokens_for([msg]), "tokens")
+                    log_skip(single_len)
                     current = []
             else:
                 # No current chunk and this message alone is too long -> skip
-                if tokens_for([msg]) <= max_len:
+                single_len = tokens_for([msg])
+                if single_len <= max_len:
                     current = [msg]
                 else:
-                    print("Skipping over-long single message with",
-                          tokens_for([msg]), "tokens")
+                    log_skip(single_len)
                     current = []
 
     if current:
@@ -78,23 +82,35 @@ def explode_long_conversations(raw_ds: Dataset,
         row = raw_ds[i]
         msgs = row["messages"]
 
-        # Optional: normalize to {role, content} only, to make sure the
-        # tokenizer sees plain strings. `_normalize_messages` is already
-        # defined earlier in your notebook.
+        # normalize messages if you have this helper
         msgs_norm = _normalize_messages(msgs)
 
-        chunks = _chunk_messages_by_tokens(msgs_norm, tokenizer, max_len)
+        # use whatever your filename column is called; adjust if needed
+        source_name = row.get("filename", f"row_{i}")
+
+        chunks = _chunk_messages_by_tokens(
+            msgs_norm,
+            tokenizer,
+            max_len,
+            source_name=str(source_name),
+        )
 
         for j, chunk in enumerate(chunks):
-            new_row = dict(row)           # shallow copy of metadata
-            new_row["messages"] = chunk   # replace with the chunked messages
+            new_row = dict(row)
+            new_row["messages"] = chunk
             new_row["orig_conv_idx"] = i
             new_row["chunk_idx"] = j
             new_rows.append(new_row)
 
     print(f"Expanded {len(raw_ds)} original rows into {len(new_rows)} chunks")
-    return Dataset.from_list(new_rows)
 
+    # Optional: summary of which files had over-long messages
+    if SKIPPED_FILES:
+        print("\nFiles with at least one skipped over-long message:")
+        for name in sorted(SKIPPED_FILES):
+            print("  ", name)
+
+    return Dataset.from_list(new_rows)
 
 def _normalize_messages(msgs: List[Dict[str, Any]]) -> List[Dict[str, str]]:
     """Normalize content fields to plain strings; keep only role & content."""
