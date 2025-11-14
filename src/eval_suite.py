@@ -5,9 +5,7 @@ import sys
 import datetime
 from typing import Callable, Optional
 import pandas as pd
-import cryptol
-from cryptol import BV
-from huggingface_hub import InferenceClient
+
 
 @dataclass
 class Config:
@@ -57,6 +55,8 @@ def run_assert(test_src: str, ns: dict) -> tuple[bool, str]:
         return False, f"Error: {e}"
 
 def execute_test_code(source_code: str, tests: list[str]) -> tuple[bool, str]:
+        import cryptol
+        from cryptol import BV
         result_ = f"\n[GENERATE BEGIN]\n```cryptol\n{source_code}\n```\n[GENERATE END]\n\n"
         try:
             with open(config.TEMP_FILE, "w") as f:
@@ -132,6 +132,7 @@ def run_eval_suite(
     # ----------------- Inference Client -----------------
     client = None
     if generate_fn is None:
+        from huggingface_hub import InferenceClient
         HF_TOKEN = os.getenv("HF_TOKEN")
         if not HF_TOKEN:
             print("ERROR: Set HF_TOKEN in your environment.", file=sys.stderr)
