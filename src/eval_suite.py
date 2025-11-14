@@ -211,9 +211,10 @@ def run_eval_suite(
 
     end_str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     print(f"\n{end_str}\nDone processing all evals.")
-    with open(filename, "w") as f:
-        f.write(results)
-    print(f"Wrote eval results to {filename}.")
+    if generate_fn is None:
+        with open(filename, "w") as f:
+            f.write(results)
+        print(f"Wrote eval results to {filename}.")
 
 if __name__ == "__main__":
     config = Config()
