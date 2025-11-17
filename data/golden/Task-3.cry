@@ -1,0 +1,13 @@
+encryptChar : [8] -> [8] -> [8]
+encryptChar key c = (c + key)
+
+decryptChar : [8] -> [8] -> [8]
+decryptChar key c = (c - key)
+
+// Encrypt entire string (sequence of bytes)
+encrypt : {n} [8] -> [n][8] -> [n][8]
+encrypt key txt = [ encryptChar key c | c <- txt ]
+
+// Decrypt entire string
+decrypt : {n} [8] -> [n][8] -> [n][8]
+decrypt key txt = [ decryptChar key c | c <- txt ]

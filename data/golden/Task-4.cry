@@ -1,0 +1,28 @@
+// --- Begin Test Setup Code ---
+encryptChar : [8] -> [8] -> [8]
+encryptChar key c = (c + key)
+
+decryptChar : [8] -> [8] -> [8]
+decryptChar key c = (c - key)
+
+// Encrypt entire string (sequence of bytes)
+encrypt : {n} [8] -> [n][8] -> [n][8]
+encrypt key txt = [ encryptChar key c | c <- txt ]
+
+// Decrypt entire string
+decrypt : {n} [8] -> [n][8] -> [n][8]
+decrypt key txt = [ decryptChar key c | c <- txt ]
+// --- End Test Setup Code ---
+
+equivalent : [8] -> [512][8] -> Bit
+property equivalent key pt = ( decrypt key ( encrypt key pt ) ) == pt
+
+// Passing test:
+/*
+    * Main> :l data/goldens/Task-4.cry
+    * Loading module Cryptol
+    * Loading module Main
+    * Main> :prove equivalent
+    * Q.E.D.
+    * (Total Elapsed Time: 0.099s, using "Z3")
+*/

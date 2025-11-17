@@ -1,0 +1,5 @@
+
+//module matrix where
+
+matrix : [3][3](Integer, Integer)
+matrix =  [[(y, x) | x <- [0 .. 2 : Integer]] | y <- [0 .. 2 : Integer] ]

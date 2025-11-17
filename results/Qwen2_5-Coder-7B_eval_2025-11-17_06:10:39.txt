@@ -1,0 +1,64 @@
+Qwen/Qwen2.5-Coder-7B Eval Suite Results
+Started at 2025-11-17_06:10:39 Ended at 2025-11-17_06:11:01
+Processed 4 tasks.
+
+=== FINAL SCORE: 1 / 4 = 25.00% ===
+
+[GENERATE BEGIN]
+```cryptol
+xor8 :: Bit[8] -> Bit[8] -> Bit[8]
+xor8 x y = x ^ y
+
+zero8 :: Bit[8]
+zero8 = 0
+```
+[GENERATE END]
+
+  [FAIL] test 1: Error: [error] at :1:1--1:5
+    Value not in scope: xor8 {'errors': ['[error] at :1:1--1:5\n    Value not in scope: xor8'], 'source': 'module name <interactive>', 'warnings': []}
+[RESULT] Task 1: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+matrix :: [[(Nat, Nat)]]
+matrix = [[(i, j) | j <- [0..2]] | i <- [0..2]]
+```
+[GENERATE END]
+
+  [FAIL] test 1: Error: [error] at :1:1--1:7
+    Value not in scope: matrix {'errors': ['[error] at :1:1--1:7\n    Value not in scope: matrix'], 'source': 'module name <interactive>', 'warnings': []}
+[RESULT] Task 2: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+encrypt :: {n} [8] -> [n][8] -> [n][8]
+encrypt shift plaintext = map (\x -> (x + shift) `mod` 256) plaintext
+
+decrypt :: {n} [8] -> [n][8] -> [n][8]
+decrypt shift ciphertext = map (\x -> (x - shift) `mod` 256) ciphertext
+```
+[GENERATE END]
+
+  [FAIL] test 1: Error: [error] at :1:1--1:8
+    Value not in scope: encrypt {'errors': ['[error] at :1:1--1:8\n    Value not in scope: encrypt'], 'source': 'module name <interactive>', 'warnings': []}
+[RESULT] Task 3: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+encryptChar : [8] -> [8] -> [8]
+encryptChar key c = (c + key)
+decryptChar : [8] -> [8] -> [8]
+decryptChar key c = (c - key)
+encrypt : {n} [8] -> [n][8] -> [n][8]
+encrypt key txt = [ encryptChar key c | c <- txt ]
+decrypt : {n} [8] -> [n][8] -> [n][8]
+decrypt key txt = [ decryptChar key c | c <- txt ]
+
+equivalent : {n} [8] -> [n][8] -> Bool
+equivalent key txt = encrypt key txt == decrypt key txt
+```
+[GENERATE END]
+
+  [PASS] test 1: OK
+[RESULT] Task 4: ALL PASS
+

@@ -6,15 +6,21 @@ import datetime
 from typing import Callable, Optional
 import pandas as pd
 
+MODEL_ALIASES = {
+    "Qwen/Qwen3-Coder-30B-A3B-Instruct": "Qwen3-Coder-30B-A3B-Instruct",
+    "Qwen/Qwen3-4B-Instruct": "Qwen3-4B-Instruct",
+    "Qwen/Qwen2.5-Coder-7B": "Qwen2_5-Coder-7B",
+    "Qwen/Qwen2.5-Coder-3B-Instruct": "Qwen2_5-Coder-3B-Instruct",
+}
 
 @dataclass
 class Config:
     SERVER_URL: str = "http://localhost:8080"          # Cryptol remote API
     MODEL_ID: str = "Qwen/Qwen3-Coder-30B-A3B-Instruct"
-    TEMP_FILE: str = "cryptol-files/generated.cry"              # single temp file; overwritten each row
+    TEMP_FILE: str = "/Users/josh/SecurityAnalytics/DataPreprocess/cryptol-files/generated.cry"       
     CRYPTOL_PATH: str = "files/generated.cry"  # path inside Cryptol server container
     EVALS_PATH: str = "/Users/josh/SecurityAnalytics/DataPreprocess/src/eval/.data/evals.jsonl"
-
+    RESULTS_FILE_PATH: str | None = None
     SYSTEM_PROMPT: str = "Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after)."
 
     FUNCTION_PROMPT_TEMPLATE: str = """\
@@ -57,7 +63,7 @@ def run_assert(test_src: str, ns: dict) -> tuple[bool, str]:
 def execute_test_code(source_code: str, tests: list[str]) -> tuple[bool, str]:
         import cryptol
         from cryptol import BV
-        result_ = f"\n[GENERATE BEGIN]\n```cryptol\n{source_code}\n```\n[GENERATE END]\n\n"
+        result_ = f"[GENERATE BEGIN]\n```cryptol\n{source_code}\n```\n[GENERATE END]\n\n"
         try:
             with open(config.TEMP_FILE, "w") as f:
                 f.write(source_code)
@@ -82,24 +88,7 @@ def execute_test_code(source_code: str, tests: list[str]) -> tuple[bool, str]:
             return False, f"{result_}\n"
 
         # Namespace exposed to exec() tests (only what's needed)
-        ns = {"cry": cry, "BV": BV}
-
-        '''
-        # Optional setup code per row
-        if setup_code.strip():
-            try:
-                exec(setup_code, ns)
-            except Exception as e:
-                result_ += f"[ERROR] test_setup_code failed: {e}"
-                print(result_)
-                results += f"{result_}\n"
-                # Try to close/reset and move on
-                try:
-                    cry.reset_server()
-                except Exception:
-                    pass
-        '''
-                
+        ns = {"cry": cry, "BV": BV}                
         # Run tests
         all_ok = True
         for i, test_src in enumerate(tests, 1):
@@ -126,9 +115,11 @@ def run_eval_suite(
     Run the eval suite given by eval_df.
     Each row should have 'task', optional 'test_setup_code', and 'test_list'.
     """
+    score = None
+    attempts = 0
+    successful_attempts = 0
     start_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
     print(f"Starting eval suite at {start_time}, {len(eval_df)} tasks to process.")
-    filename = f"src/eval/.data/test/eval_results_{start_time}.txt"
     # ----------------- Inference Client -----------------
     client = None
     if generate_fn is None:
@@ -200,7 +191,10 @@ def run_eval_suite(
             source_code = f"{setup_code}\n\n{source_code}"
 
         if execute:
+            attempts += 1
             all_ok, result_ = execute_test_code(source_code, tests)
+            if all_ok:
+                successful_attempts += 1
             result_ += f"[RESULT] Task {task_id}: {'ALL PASS' if all_ok else 'HAS FAILURES'}\n"
             print(result_)
             results += f"{result_}\n"
@@ -208,15 +202,28 @@ def run_eval_suite(
             result_ += f"[GENERATED BEGIN]\n```cryptol\n{source_code}\n```\n[GENERATED END]\n"
             print(result_)
             results += f"{result_}\n"
-
-    end_str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    print(f"\n{end_str}\nDone processing all evals.")
-    if generate_fn is None:
-        with open(filename, "w") as f:
+    end_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    if attempts > 0:
+        score = successful_attempts / attempts * 100.0
+        final_message = f"\n=== FINAL SCORE: {successful_attempts} / {attempts} = {score:.2f}% ===\n"
+        print(f"\n=== FINAL SCORE: {successful_attempts} / {attempts} = {score:.2f}% ===\n")
+    else:
+        final_message = "\n=== FINAL SCORE: N/A (no executed tasks) ===\n"
+        print("\n=== FINAL SCORE: N/A (no executed tasks) ===\n")
+    results = f"{config.MODEL_ID} Eval Suite Results\nStarted at {start_time} Ended at {end_time}\nProcessed {len(eval_df)} tasks.\n{final_message}\n" + results
+    print(f"\n{end_time}\nDone processing all evals.")
+    if config.RESULTS_FILE_PATH is not None:
+        with open(config.RESULTS_FILE_PATH, "w") as f:
             f.write(results)
-        print(f"Wrote eval results to {filename}.")
+        print(f"Wrote eval results to {config.RESULTS_FILE_PATH}.")
 
 if __name__ == "__main__":
-    config = Config()
+    start_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    model = "Qwen/Qwen2.5-Coder-7B"
+    config = Config(
+        MODEL_ID=model,
+        EVALS_PATH="/Users/josh/SecurityAnalytics/Colab-Training/data/evals.jsonl",
+        RESULTS_FILE_PATH=f"/Users/josh/SecurityAnalytics/Colab-Training/results/{MODEL_ALIASES[model]}_eval_{start_time}.txt",
+    )
     eval_df = pd.read_json(config.EVALS_PATH, lines=True)
     run_eval_suite(eval_df, config, True)
