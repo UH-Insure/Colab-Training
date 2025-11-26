@@ -4,14 +4,77 @@ from typing import List, Dict, Any
 
 SKIPPED_FILES = set()
 
-def _chunk_messages_by_tokens(messages, tokenizer, max_len: int, source_name: str | None = None):
+def _split_assistant_into_chunks(
+    prefix_msgs,
+    assistant_msg,
+    tokenizer,
+    max_len: int,
+):
     """
-    Split a single conversation (list of {role, content}) into a list of
-    shorter conversations, each of which tokenizes to <= max_len tokens.
+    Return a list of new conversations of the form:
 
-    If a single message is itself > max_len tokens, we skip it and log
-    its token length and (optionally) the source_name (e.g., filename).
+        [*prefix_msgs, {"role": "assistant", "content": part_i}]
+
+    where each conversation is <= max_len tokens.
     """
+    assert assistant_msg["role"] == "assistant"
+
+    text = assistant_msg["content"]
+    lines = text.splitlines(keepends=True)
+
+    chunks = []
+    cur_lines: list[str] = []
+
+    def conv_tokens(lines_fragment):
+        conv = prefix_msgs + [{
+            "role": "assistant",
+            "content": "".join(lines_fragment),
+        }]
+        ids = tokenizer.apply_chat_template(
+            conv,
+            tokenize=True,
+            add_generation_prompt=True,
+            truncation=False,
+        )
+        return len(ids)
+
+    for line in lines:
+        tentative = cur_lines + [line]
+        if conv_tokens(tentative) <= max_len:
+            cur_lines.append(line)
+        else:
+            if cur_lines:
+                # flush current chunk
+                chunks.append(prefix_msgs + [{
+                    "role": "assistant",
+                    "content": "".join(cur_lines),
+                }])
+                cur_lines = [line]
+            else:
+                # single line is too long (rare) – you could fall back to
+                # character-based splitting here if you ever hit this case
+                chunks.append(prefix_msgs + [{
+                    "role": "assistant",
+                    "content": line,
+                }])
+                cur_lines = []
+
+    if cur_lines:
+        chunks.append(prefix_msgs + [{
+            "role": "assistant",
+            "content": "".join(cur_lines),
+        }])
+
+    return chunks
+
+
+def _chunk_messages_by_tokens(
+    messages,
+    tokenizer,
+    max_len: int,
+    source_name: str | None = None,
+    long_msg_mode: str = "skip",
+):
     chunks = []
     current = []
 
@@ -20,7 +83,7 @@ def _chunk_messages_by_tokens(messages, tokenizer, max_len: int, source_name: st
             msgs,
             tokenize=True,
             add_generation_prompt=True,
-            truncation=False,   # we want the true length
+            truncation=False,
         )
         return len(ids)
 
@@ -36,36 +99,56 @@ def _chunk_messages_by_tokens(messages, tokenizer, max_len: int, source_name: st
         length = tokens_for(tentative)
 
         if length <= max_len:
-            # Safe to add this message to the current chunk
             current = tentative
-        else:
-            # Current chunk is full -> flush it if non-empty
+            continue
+
+        # At this point, adding `msg` made us too long.
+        single_len = tokens_for([msg])
+
+        # Case 1: message itself fits; just close current chunk.
+        if single_len <= max_len:
             if current:
                 chunks.append(current)
-                single_len = tokens_for([msg])
-                if single_len <= max_len:
-                    current = [msg]
-                else:
-                    log_skip(single_len)
-                    current = []
-            else:
-                # No current chunk and this message alone is too long -> skip
-                single_len = tokens_for([msg])
-                if single_len <= max_len:
-                    current = [msg]
-                else:
-                    log_skip(single_len)
-                    current = []
+            current = [msg]
+            continue
+
+        # Case 2: SINGLE MESSAGE is itself too long
+        if (
+            long_msg_mode == "split"
+            and msg.get("role") == "assistant"
+        ):
+            # We *don't* want a chunk that is just `current` with no assistant,
+            # so we *don't* append `current` alone.
+            prefix = current
+
+            # Split the assistant message into several smaller convs
+            split_convs = _split_assistant_into_chunks(
+                prefix_msgs=prefix,
+                assistant_msg=msg,
+                tokenizer=tokenizer,
+                max_len=max_len,
+            )
+
+            chunks.extend(split_convs)
+            current = []  # reset
+        else:
+            # Old behavior: skip
+            if current:
+                chunks.append(current)
+            log_skip(single_len)
+            current = []
 
     if current:
         chunks.append(current)
 
     return chunks
 
-
-def explode_long_conversations(raw_ds: Dataset,
-                               tokenizer,
-                               max_len: int) -> Dataset:
+def explode_long_conversations(
+    raw_ds: Dataset,
+    tokenizer,
+    max_len: int,
+    long_msg_mode: str = "skip",   # "skip" (current behavior) or "split"
+) -> Dataset:
     """
     Take the original `raw` Dataset with a `messages` column and return
     a new Dataset where long conversations have been split into multiple
@@ -75,7 +158,14 @@ def explode_long_conversations(raw_ds: Dataset,
     Two extra columns are added:
       - orig_conv_idx: the original row index in `raw`
       - chunk_idx: which chunk number (0, 1, 2, ...) from that conversation
+
+    long_msg_mode:
+      - "skip": if a *single* message > max_len, skip it (old behavior)
+      - "split": if an *assistant* message > max_len, split it into multiple
+                 assistant replies, each in its own conversation
     """
+    assert long_msg_mode in {"skip", "split"}
+
     new_rows = []
 
     for i in range(len(raw_ds)):
@@ -93,6 +183,7 @@ def explode_long_conversations(raw_ds: Dataset,
             tokenizer,
             max_len,
             source_name=str(source_name),
+            long_msg_mode=long_msg_mode,   # <-- pass mode through
         )
 
         for j, chunk in enumerate(chunks):
@@ -162,4 +253,3 @@ def load_or_make_dataset(jsonl_path: str):
             ]},
         ]
         return Dataset.from_list(toy)
-
