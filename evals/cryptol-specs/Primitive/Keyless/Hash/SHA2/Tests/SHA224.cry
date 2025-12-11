@@ -1,0 +1,28 @@
+module Primitive::Keyless::Hash::SHA2::Tests::SHA224 where
+import Primitive::Keyless::Hash::SHA2::Instantiations::SHA224 as SHA224
+
+property abcWorks = SHA224::hash (join "abc") == output where
+    output = join [
+        0x23097d22, 0x3405d822, 0x8642a477, 0xbda255b3,
+        0x2aadbce4, 0xbda0b3f7, 0xe36c9da7
+    ]
+
+property emptyStringWorks = SHA224::hash [] == output where
+    output = join [
+        0xd14a028c, 0x2a3a2bc9, 0x476102bb, 0x288234c4,
+        0x15a2b01f, 0x828ea62a, 0xc5b3e42f
+    ]
+
+property alphabet448 = SHA224::hash input == output where
+    input = join "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+    output = join [
+        0x75388b16, 0x512776cc, 0x5dba5da1, 0xfd890150,
+        0xb0c6455c, 0xb4f58b19, 0x52522525
+    ]
+
+property alphabet896 = SHA224::hash input == output where
+    input = join "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"
+    output = join [
+        0xc97ca9a5, 0x59850ce9, 0x7a04a96d, 0xef6d99a9,
+        0xe0e0e2ab, 0x14e6b8df, 0x265fc0b3
+    ]

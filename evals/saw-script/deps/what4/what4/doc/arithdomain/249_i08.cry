@@ -1,0 +1,11 @@
+type Dom n = {lo : [n], sz : [n]}
+interval : {n} (fin n) => [n] -> [n] -> Dom n
+interval l s = {lo = l, sz = s}
+singleton : {n} (fin n) => [n] -> Dom n
+singleton x = interval x 0
+neg : {n} (fin n) => Dom n -> Dom n
+neg a = interval (-(a.lo + a.sz)) a.sz
+singleton_neg : {n} (fin n) => [n] -> Bit
+singleton_neg x = neg (singleton x) == singleton (-x)
+/* pragma i08 : property */
+i08 = singleton_neg`{16}

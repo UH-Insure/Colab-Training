@@ -1,0 +1,5 @@
+type Dom n = {lo : [n], sz : [n]}
+interval : {n} (fin n) => [n] -> [n] -> Dom n
+interval l s = {lo = l, sz = s}
+range : {n} (fin n) => [n] -> [n] -> Dom n
+range lo hi = interval lo (hi - lo)

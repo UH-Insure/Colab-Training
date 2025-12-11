@@ -1,0 +1,13 @@
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_KeyWrap
+
+
+check_KWP_AE key pt expected_ct = KWP_AE key pt == expected_ct
+/* pragma tcId1080 : property */
+tcId1080 =
+  testPassed == check_KWP_AE key pt ct
+  where
+    testPassed = True
+    key =
+      0x3ea9325069ed93a96c331bdd6dd766ec64bbba83a72c69ed75df55043fb0bfd1
+    pt = 0x06
+    ct = 0x40a9c42012ba38211b800e6e313b6876

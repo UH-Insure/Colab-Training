@@ -1,0 +1,7 @@
+usaf: [1][8] -> [10][8] -> [1][8]
+usaf a b = [(b@(a@0))]
+
+saf : [1][8] -> [10][8] -> [1][8]
+saf a b = if a@0 > 9 then [0]
+          else if a@0 < 0 then [0]
+			 else [(b@(a@0))]

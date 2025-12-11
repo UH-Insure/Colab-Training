@@ -1,0 +1,14 @@
+module Primitive::Symmetric::Cipher::Block::Modes::CFB where
+import interface Primitive::Symmetric::Cipher::Block::CipherInterface as C
+
+encrypt : {s, n} (fin s, fin n, s >= 0, s <= C::BlockSize)
+    => [C::KeySize] -> [C::BlockSize] -> [n][s] -> [n][s]
+// TODO: implement generic CFB encrypt using type signature below.
+
+decrypt : {s, n} (fin s, fin n, s >= 0, s <= C::BlockSize)
+    => [C::KeySize] -> [C::BlockSize] -> [n][s] -> [n][s]
+// TODO: implement generic CFB decrypt using type signature below.
+
+encryptCorrect : {s, n} (fin n, s >= 0, s <= C::BlockSize)
+    => [C::KeySize] -> [C::BlockSize] -> [n][s] -> Bool
+property encryptCorrect K IV Ps = (decrypt K IV (encrypt K IV Ps)) == Ps

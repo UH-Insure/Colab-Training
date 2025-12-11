@@ -1,0 +1,4352 @@
+j05hr3d/SFT-Qwen2.5-Coder-7B_v1.1st Eval Suite Results
+Started at 2025-12-10_10:32:29 Ended at 2025-12-10_11:00:22
+Processed 51 tasks.
+
+=== FINAL SCORE: N/A (no executed tasks) ===
+
+
+=== Task 1 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification for the McEliece KEM low-level Operations module, defining the functions crypto_kem_enc and crypto_kem_dec (and their helper hash functions) with appropriate types and ensuring they match the intended McEliece KEM encryption and decryption behavior.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Asymmetric::KEM::McEliece::Operations where
+
+import Common::utils
+import Primitive::Asymmetric::KEM::McEliece::Types
+import Primitive::Asymmetric::KEM::McEliece::Hashing
+
+crypto_kem_enc : (Ct, Ss)
+crypto_kem_enc = (ct, ss)
+
+  where
+    (ss, s) = gen_priv_key
+    ct      = hash_to_ct s
+
+crypto_kem_dec : (Ct, Ss) -> (Bit, Pt)
+crypto_kem_dec (ct, ss) = (dec_ok, pt)
+
+  where
+    dec_ok = check_decryption ct ss
+    pt     = hash_to_pt ct
+```
+[GENERATED END]
+
+
+=== Task 2 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Specify the Cryptol types and full implementations for load2, bitrev, store8, load8, and transpose_64x64 used in a McEliece KEM utility module, matching the shown bitwise behavior and using the imported Types definitions.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Asymmetric::KEM::McEliece::Util where
+
+import Types
+
+load2 : [128] -> [2][64]
+load2 x = split x
+
+bitrev : {n} (fin n) => [n] -> [n]
+bitrev x = join (reverse (split x))
+
+store8 : [64] -> [8][8]
+store8 x = split x
+
+load8 : [8][8] -> [64]
+load8 x = join x
+
+transpose_64x64 : [64][64] -> [64][64]
+transpose_64x64 x = transpose x
+```
+[GENERATED END]
+
+
+=== Task 3 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module that defines the same ECDSA test properties for NIST curves P-192, P-224, P-256, P-384, and P-521, including point decompression, point addition/subtraction, doubling, scalar and joint scalar multiplication, and mp_mod_sqrt correctness, matching the constants and structure shown.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+module Primitive::Asymmetric::Signature::ECDSA::Tests::ECDSA where
+
+import Common::utils
+import Primitive::Asymmetric::Signature::ECDSA::Instantiations::P192
+import Primitive::Asymmetric::Signature::ECDSA::Instantiations::P224
+import Primitive::Asymmetric::Signature::ECDSA::Instantiations::P256
+import Primitive::Asymmetric::Signature::ECDSA::Instantiations::P384
+import Primitive::Asymmetric::Signature::ECDSA::Instantiations::P521
+
+property pointDecompressionWorks = all (\(x, y) -> y == decompressPoint x True) points
+    where points = [(x, y) | x <- xCoords | y <- yCoords]
+
+property pointAdditionWorks = all (\(x1, y1, x2, y2, x3, y3) ->
+    (x3, y3) == addPoints (x1, y1) (x2, y2)) points
+    where points = [(x1, y1, x2, y2, x3, y3)
+        | x1 <- xCoords | y1 <- yCoords
+        | x2 <- xCoords | y2 <- yCoords
+        | x3 <- xCoords | y3 <- yCoords]
+
+property pointSubtractionWorks = all (\(x1, y1, x2, y2, x3, y3) ->
+    (x3, y3) == subtractPoints (x1, y1) (x2, y2)) points
+    where points = [(x1, y1, x2, y2, x3, y3)
+        | x1 <- xCoords | y1 <- yCoords
+        | x2 <- xCoords | y2 <- yCoords
+        | x3 <- xCoords | y3 <- yCoords]
+
+property pointDoublingWorks = all (\(x1, y1, x2, y2) ->
+    (x2, y2) == doublePoint (x1, y1)) points
+    where points = [(x1, y1, x2, y2)
+        | x1 <- xCoords | y1 <- yCoords
+        | x2 <- xCoords | y2 <- yCoords]
+
+property scalarMultiplicationWorks = all (\(d, x1, y1, x2, y2) ->
+    (x2, y2) == scalarMult d (x1, y1)) points
+    where points = [(d, x1, y1, x2, y2)
+        | d <- ds | x1 <- xCoords | y1 <- yCoords
+        | x2 <- xCoords | y2 <- yCoords]
+
+property jointScalarMultiplicationWorks = all (\(d1, d2, x1, y1, x2, y2, x3, y3) ->
+    (x3, y3) == jointScalarMult d1 d2 (x1, y1) (x2, y2)) points
+    where points = [(d1, d2, x1, y1, x2, y2, x3, y3)
+        | d1 <- ds | d2 <- ds
+        | x1 <- xCoords | y1 <- yCoords
+        | x2 <- xCoords | y2 <- yCoords
+        | x3 <- xCoords | y3 <- yCoords]
+
+property mpModSqrtWorks = all (\(a, b) -> b == mp_mod_sqrt a) points
+
+property mpModSqrtWorks' = all (\(a, b) -> b == mp_mod_sqrt' a) points
+
+property mpModSqrtWorks'' = all (\(a, b) -> b == mp_mod_sqrt'' a) points
+
+property mpModSqrtWorks''' = all (\(a, b) -> b == mp_mod_sqrt''' a) points
+
+property mpModSqrtWorks'''' = all (\(a, b) -> b == mp_mod_sqrt'''' a) points
+
+property mpModSqrtWorks''''' = all (\(a, b) -> b == mp_mod_sqrt''''' a) points
+
+property mpModSqrtWorks'''''' = all (\(a, b) -> b == mp_mod_sqrt'''''' a) points
+
+property mpModSqrtWorks''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''' a) points
+
+property mpModSqrtWorks'''''''' = all (\(a, b) -> b == mp_mod_sqrt'''''''' a) points
+
+property mpModSqrtWorks''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''' a) points
+
+property mpModSqrtWorks'''''''''' = all (\(a, b) -> b == mp_mod_sqrt'''''''''' a) points
+
+property mpModSqrtWorks''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''' = all (\(a, b) -> b == mp_mod_sqrt'''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' = all (\(a, b) -> b == mp_mod_sqrt''''''''''''' a) points
+
+property mpModSqrtWorks''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' =
+```
+[GENERATED END]
+
+
+=== Task 4 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol module implementing the HMAC construction with a SHA-256-based instance `hmacSHA256`, including the helper function `kinit` and the generic `hmac` function with the given polymorphic sizes and type constraints.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::MAC::HMAC::Instantiations::HMAC_SHA256 where
+
+import Primitive::Symmetric::MAC::HMAC::HMAC
+import Primitive::Keyless::Hash::SHA2::Instantiations::SHA256
+
+type KInitLen = 64
+type BlockLen = 64
+type DigestLen = 256
+
+kinit : {keylen} (fin keylen, width keylen <= KInitLen) => [keylen] -> [KInitLen]
+kinit k = if (`keylen > `BlockLen) then SHA256 k else zero # k
+
+hmacSHA256 : {msgLen} (width msgLen <= BlockLen) => [64][8] -> [msgLen][8] -> [32][8]
+hmacSHA256 = hmac `{BlockLen} SHA256
+```
+[GENERATED END]
+
+
+=== Task 5 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the Cryptol module `Primitive::Symmetric::Cipher::Block::AES::SubByteSBox` implementing the AES SubBytes and InvSubBytes transformations with functions `SubByte : GF28 -> GF28` and `InvSubByte : GF28 -> GF28`, using `sbox` and `sboxInv` over `GF28` elements.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+module Primitive::Symmetric::Cipher::Block::AES::SubByteSBox where
+
+import Primitive::Symmetric::Cipher::Block::AES::GF28
+
+type SBox = [256]GF28
+
+SubByte : GF28 -> GF28
+SubByte x = sbox @ x
+
+InvSubByte : GF28 -> GF28
+InvSubByte x = sboxInv @ x
+
+sbox : SBox
+sbox =
+  [0x63,
+  0x7c,
+  0x77,
+  0x7b,
+  0xf2,
+  0x6b,
+  0x6f,
+  0xc5,
+  0x30,
+  0x01,
+  0x67,
+  0x2b,
+  0xfe,
+  0xd7,
+  0xab,
+  0x76,
+  0xca,
+  0x82,
+  0xc9,
+  0x7d,
+  0xfa,
+  0x59,
+  0x47,
+  0xf0,
+  0xad,
+  0xd4,
+  0xa2,
+  0xaf,
+  0x9c,
+  0xa4,
+  0x72,
+  0xc0,
+  0xb7,
+  0xfd,
+  0x93,
+  0x26,
+  0x36,
+  0x3f,
+  0xf7,
+  0xcc,
+  0x34,
+  0xa5,
+  0xe5,
+  0xf1,
+  0x71,
+  0xd8,
+  0x31,
+  0x15,
+  0x04,
+  0xc7,
+  0x23,
+  0xc3,
+  0x18,
+  0x96,
+  0x05,
+  0x9a,
+  0x07,
+  0x12,
+  0x80,
+  0xe2,
+  0xeb,
+  0x27,
+  0xb2,
+  0x75,
+  0x09,
+  0x83,
+  0x2c,
+  0x1a,
+  0x1b,
+  0x6e,
+  0x5a,
+  0xa0,
+  0x52,
+  0x3b,
+  0xd6,
+  0xb3,
+  0x29,
+  0xe3,
+  0x2f,
+  0x84,
+  0x53,
+  0xd1,
+  0x00,
+  0xed,
+  0x20,
+  0xfc,
+  0xb1,
+  0x5b,
+  0x6a,
+  0xcb,
+  0xbe,
+  0x39,
+  0x4a,
+  0x4c,
+  0x58,
+  0xcf,
+  0xd0,
+  0xef,
+  0xaa,
+  0xfb,
+  0x43,
+  0x4d,
+  0x33,
+  0x85,
+  0x45,
+  0xf9,
+  0x02,
+  0x7f,
+  0x50,
+  0x3c,
+  0x9f,
+  0xa8,
+  0x51,
+  0xa3,
+  0x40,
+  0x8f,
+  0x92,
+  0x9d,
+  0x38,
+  0xf5,
+  0xbc,
+  0xb6,
+  0xda,
+  0x21,
+  0x10,
+  0xff,
+  0xf3,
+  0xd2,
+  0xcd,
+  0x0c,
+  0x13,
+  0xec,
+  0x5f,
+  0x97,
+  0x44,
+  0x17,
+  0xc4,
+  0xa7,
+  0x7e,
+  0x3d,
+  0x64,
+  0x5d,
+  0x19,
+  0x73,
+  0x60,
+  0x81,
+  0x4f,
+  0xdc,
+  0x22,
+  0x2a,
+  0x90,
+  0x88,
+  0x46,
+  0xee,
+  0xb8,
+  0x14,
+  0xde,
+  0x5e,
+  0x0b,
+  0xdb,
+  0xe0,
+  0x32,
+  0x3a,
+  0x0a,
+  0x49,
+  0x06,
+  0x24,
+  0x5c,
+  0xc2,
+  0xd3,
+  0xac,
+  0x62,
+  0x91,
+  0x95,
+  0xe4,
+  0x79,
+  0xe7,
+  0xc8,
+  0x37,
+  0x6d,
+  0x8d,
+  0xd5,
+  0x4e,
+  0xa9,
+  0x6c,
+  0x56,
+  0xf4,
+  0xea,
+  0x65,
+  0x7a,
+  0xae,
+  0x08,
+  0xba,
+  0x78,
+  0x25,
+  0x2e,
+  0x1c,
+  0xa6,
+  0xb4,
+  0xc6,
+  0xe8,
+  0xdd,
+  0x74,
+  0x1f,
+  0x4b,
+  0xbd,
+  0x8b,
+  0x8a,
+  0x70,
+  0x3e,
+  0xb5,
+  0x66,
+  0x48,
+  0x03,
+  0xf6,
+  0x0e,
+  0x61,
+  0x35,
+  0x57,
+  0xb9,
+  0x86,
+  0xc1,
+  0x1d,
+  0x9e,
+  0xe1,
+  0xf8,
+  0x98,
+  0x11,
+  0x69,
+  0xd9,
+  0x8e,
+  0x94,
+  0x9b,
+  0x1e,
+  0x87,
+  0xe9,
+  0xce,
+  0x55,
+  0x28,
+  0xdf,
+  0x8c,
+  0xa1,
+  0x89,
+  0x0d,
+  0xbf,
+  0xe6,
+  0x42,
+  0x68,
+  0x41,
+  0x99,
+  0x2d,
+  0x0f,
+  0xb0,
+  0x54,
+  0xbb,
+  0x16]
+
+sboxInv : SBox
+sboxInv =
+  [0x52,
+  0x09,
+  0x6a,
+  0xd5,
+  0x30,
+  0x36,
+  0xa5,
+  0x38,
+  0xbf,
+  0x40,
+  0xa3,
+  0x9e,
+  0x81,
+  0xf3,
+  0xd7,
+  0xfb,
+  0x7c,
+  0xe3,
+  0x39,
+  0x82,
+  0x9b,
+  0x2f,
+  0xff,
+  0x87,
+  0x34,
+  0x8e,
+  0x43,
+  0x44,
+  0xc4,
+  0xde,
+  0xe9,
+  0xcb,
+  0x54,
+  0x7b,
+  0x94,
+  0x32,
+  0xa6,
+  0xc2,
+  0x23,
+  0x3d,
+  0xee,
+  0x4c,
+  0x95,
+  0x0b,
+  0x42,
+  0xfa,
+  0xc3,
+  0x4e,
+  0x08,
+  0x2e,
+  0xa1,
+  0x66,
+  0x28,
+  0xd9,
+  0x24,
+  0xb2,
+  0x76,
+  0x5b,
+  0xa2,
+  0x49,
+  0x6d,
+  0x8b,
+  0xd1,
+  0x25,
+  0x72,
+  0xf8,
+  0xf6,
+  0x64,
+  0x86,
+  0x68,
+  0x98,
+  0x16,
+  0xd4,
+  0xa4,
+  0x5c,
+  0xcc,
+  0x5d,
+  0x65,
+  0xb6,
+  0x92,
+  0x6c,
+  0x70,
+  0x48,
+  0x50,
+  0xfd,
+  0xed,
+  0xb9,
+  0xda,
+  0x5e,
+  0x15,
+  0x46,
+  0x57,
+  0xa7,
+  0x8d,
+  0x9d,
+  0x84,
+  0x90,
+  0xd8,
+  0xab,
+  0x00,
+  0x8c,
+  0xbc,
+  0xd3,
+  0x0a,
+  0xf7,
+  0xe4,
+  0x58,
+  0x05,
+  0xb8,
+  0xb3,
+  0x45,
+  0x06,
+  0xd0,
+  0x2c,
+  0x1e,
+  0x8f,
+  0xca,
+  0x3f,
+  0x0f,
+  0x02,
+  0xc1,
+  0xaf,
+  0xbd,
+  0x03,
+  0x01,
+  0x13,
+  0x8a,
+  0x6b,
+  0x3a,
+  0x91,
+  0x11,
+  0x41,
+  0x4f,
+  0x67,
+  0xdc,
+  0xea,
+  0x97,
+  0xf2,
+  0xcf,
+  0xce,
+  0xf0,
+  0xb4,
+  0xe6,
+  0x73,
+  0x96,
+  0xac,
+  0x74,
+  0x22,
+  0xe7,
+  0xad,
+  0x35,
+  0x85,
+  0xe2,
+  0xf9,
+  0x37,
+  0xe8,
+  0x1c,
+  0x75,
+  0xdf,
+  0x6e,
+  0x47,
+  0xf1,
+  0x1a,
+  0x71,
+  0x1d,
+  0x29,
+  0xc5,
+  0x89,
+  0x6f,
+  0xb7,
+  0x62,
+  0x0e,
+  0xaa,
+  0x18,
+  0xbe,
+  0x1b,
+  0xfc,
+  0x56,
+  0x3e,
+  0x4b,
+  0xc6,
+  0xd2,
+  0x79,
+  0x20,
+  0x9a,
+  0xdb,
+  0xc0,
+  0xfe,
+  0x78,
+  0xcd,
+  0x5a,
+  0xf4,
+  0x1f,
+  0xdd,
+  0xa8,
+  0x33,
+  0x88,
+  0x07,
+  0xc7,
+  0x31,
+  0xb1,
+  0x12,
+  0x10,
+  0x59,
+  0x27,
+  0x80,
+  0xec,
+  0x5f,
+  0x60,
+  0x51,
+  0x7f,
+  0xa9,
+  0x19,
+  0xb5,
+  0x4a,
+  0x0d,
+  0x08,
+  0x18,
+  0x6a,
+  0xd7,
+  0xab,
+  0x76,
+  0xca,
+  0x82,
+  0xc9,
+  0x7d,
+  0xfa,
+  0x59,
+  0x47,
+  0xf0,
+  0xad,
+  0xd4,
+  0xa2,
+  0xaf,
+  0x9c,
+  0xa4,
+  0x72,
+  0xc0,
+  0xb7,
+  0xfd,
+  0x93,
+  0x26,
+  0x36,
+  0x3f,
+  0xf7,
+  0xcc,
+  0x34,
+  0xa5,
+  0xe5,
+  0xf1,
+  0x71,
+  0xd8,
+  0x31,
+  0x15,
+  0x04,
+  0xc7,
+  0x23,
+  0xc3,
+  0x18,
+  0x96,
+  0x05,
+  0x9a,
+  0x07,
+  0x12,
+  0x80,
+  0xe2,
+  0xeb,
+  0x27,
+  0xb2,
+  0x75,
+  0x09,
+  0x83,
+  0x2c,
+  0x1a,
+  0x1b,
+  0x6e,
+  0x5a,
+  0xa0,
+  0x52,
+  0x3b,
+  0xd6,
+  0xb3,
+  0x29,
+  0xe3,
+  0x2f,
+  0x84,
+  0x53,
+  0xd1,
+  0x00,
+  0xed,
+  0x20,
+  0xfc,
+  0xb1,
+  0x5b,
+  0x6a,
+  0xcb,
+  0xbe,
+  0x39,
+  0x4a,
+  0x4c,
+  0x58,
+  0xcf,
+  0xd0,
+  0xef,
+  0xaa,
+  0xfb,
+  0x43,
+  0x4d,
+  0x33,
+  0x85,
+  0x45,
+  0xf9,
+  0x02,
+  0x7f,
+  0x50,
+  0x3c,
+  0x9f,
+  0xa8,
+  0x51,
+  0xa3,
+  0x40,
+  0x8f,
+  0x92,
+  0x9d,
+  0x38,
+  0xf5,
+  0xbc,
+  0xb6,
+  0xda,
+  0x21,
+  0x10,
+  0xff,
+  0xf3,
+  0xd2,
+  0xcd,
+  0x0c,
+  0x13,
+  0xec,
+  0x5f,
+  0x97,
+  0x44,
+  0x17,
+  0xc4,
+  0xa7,
+  0x7e,
+  0x3d,
+  0x64,
+  0x5d,
+  0x19,
+  0x73,
+  0x60,
+  0x81,
+  0x4f,
+  0xdc,
+  0x22,
+  0x2a,
+  0x90,
+  0x88,
+  0x46
+```
+[GENERATED END]
+
+
+=== Task 6 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module that defines properties `fp2_frobenius_prop`, `f6_frobenius_prop`, and `f12_frobenius_prop` asserting that `fp2_frobenius`, `fp6_frobenius`, and `fp12_frobenius` equal `F_expt` over `P::Fp_2`, `P::Fp_6`, and `P::Fp_12` (after normalization) using the prime `p : [381] = P::p`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Frobenius where
+
+import Parameters as P
+import FrobeniusElsie as F
+
+property fp2_frobenius_prop = fp2_eq
+    where
+        fp2_eq = fp2_frobenius == F_expt
+
+private
+    fp2_frobenius = F::fp2_frobenius P::Fp_2
+    F_expt = P::Fp_2.expt`{1} P::p
+    fp2_eq = fp2_frobenius == F_expt
+
+property f6_frobenius_prop = fp6_eq
+    where
+        fp6_eq = fp6_frobenius == F_expt
+
+private
+    fp6_frobenius = F::fp6_frobenius P::Fp_6
+    F_expt = P::Fp_6.expt`{5} P::p
+    fp6_eq = fp6_frobenius == F_expt
+
+property f12_frobenius_prop = fp12_eq
+    where
+        fp12_eq = fp12_frobenius == F_expt
+
+private
+    fp12_frobenius = F::fp12_frobenius P::Fp_12
+    F_expt = P::Fp_12.expt`{11} P::p
+    fp12_eq = fp12_frobenius == F_expt
+```
+[GENERATED END]
+
+
+=== Task 7 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the function `core_verify_pk_in_g1` that verifies a BLS signature in G1 by comparing two `bls_ate_pairing` results (one using the public key and `hash_to_curve_opt(msg, dst)`, and the other using the base point `BP` and the signature), returning an `Fp_12.is_equal` boolean.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Core where
+
+import Parameters (Fp, Fp_12, t_Fp, BP, G1, G2, E', hash_to_curve_opt)
+import ShortWeierstrassCurve (AffinePoint, is_point_O, x_coord, y_coord, AffineToProjective)
+import Pairing (bls_ate_pairing)
+import Serialization (serialize_G1, serialize_G2)
+
+core_verify_pk_in_g1 : {msg_len,dst_len} (fin msg_len, fin dst_len, 64 >= width msg_len, 64 >= width dst_len) => (t_Fp, [msg_len][8], [dst_len][8]) -> Bool
+core_verify_pk_in_g1 (pk, msg, dst) =
+    if is_point_O (AffineToProjective pk)
+    then False
+    else Fp_12.is_equal (bls_ate_pairing (AffineToProjective pk, hash_to_curve_opt(msg, dst)))
+                        (bls_ate_pairing (BP, AffineToProjective sig))
+    where sig = deserialize_G2 (serialize_G2 (hash_to_curve_opt(msg, dst)))
+
+deserialize_G2 : {n} (fin n) => [2*n][8] -> AffinePoint t_Fp G2
+deserialize_G2 bytes = (x, y)
+    where
+        x = Fp.from_bytes (split (take`{n*8} bytes))
+        y = Fp.from_bytes (split (drop`{n*8} bytes))
+
+serialize_G1 : {n} (fin n) => AffinePoint t_Fp G1 -> [2*n][8]
+serialize_G1 P = join (map Fp.to_bytes (serialize_G1' P))
+
+serialize_G1' : {n} (fin n) => AffinePoint t_Fp G1 -> [2][n][8]
+serialize_G1' P = [x,y]
+    where
+        x = x_coord P
+        y = y_coord P
+```
+[GENERATED END]
+
+
+=== Task 8 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol module `Pairing` that specifies the BLS optimal ate pairing over the BN curve, including `bls_ate_pairing`, `ate_pairing`, the Miller loop (`miller_step`, `line_function`), and the final exponentiation using Frobenius maps, with appropriate types and intermediate helpers.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+module Pairing where
+
+import Parameters
+import ShortWeierstrassCurve as EC
+import Frobenius
+import FieldExtras
+
+type t_Fp = Z Fp
+type t_Fp2 = (t_Fp, t_Fp)
+type t_Fp12 = (t_Fp2, t_Fp2, t_Fp2)
+
+Fp = Z Fp
+Fp2 = (Fp, Fp)
+Fp12 = (Fp2, Fp2, Fp2)
+
+G1 = EC::EC t_Fp x_G1 y_G1
+G2 = EC::EC t_Fp2 x_G2 y_G2
+
+x_P = x_G1
+y_P = y_G1
+x_Q = x_G2
+y_Q = y_G2
+
+x_R = x_G1
+y_R = y_G1
+x_S = x_G2
+y_S = y_G2
+
+x_T = x_G1
+y_T = y_G1
+x_U = x_G2
+y_U = y_G2
+
+x_V = x_G1
+y_V = y_G1
+x_W = x_G2
+y_W = y_G2
+
+x_X = x_G1
+y_X = y_G1
+x_Y = x_G2
+y_Y = y_G2
+
+x_Z = x_G1
+y_Z = y_G1
+x_K = x_G2
+y_K = y_G2
+
+x_L = x_G1
+y_L = y_G1
+x_M = x_G2
+y_M = y_G2
+
+x_N = x_G1
+y_N = y_G1
+x_O = x_G2
+y_O = y_G2
+
+x_P' = x_G1
+y_P' = y_G1
+x_Q' = x_G2
+y_Q' = y_G2
+
+x_R' = x_G1
+y_R' = y_G1
+x_S' = x_G2
+y_S' = y_G2
+
+x_T' = x_G1
+y_T' = y_G1
+x_U' = x_G2
+y_U' = y_G2
+
+x_V' = x_G1
+y_V' = y_G1
+x_W' = x_G2
+y_W' = y_G2
+
+x_X' = x_G1
+y_X' = y_G1
+x_Y' = x_G2
+y_Y' = y_G2
+
+x_Z' = x_G1
+y_Z' = y_G1
+x_K' = x_G2
+y_K' = y_G2
+
+x_L' = x_G1
+y_L' = y_G1
+x_M' = x_G2
+y_M' = y_G2
+
+x_N' = x_G1
+y_N' = y_G1
+x_O' = x_G2
+y_O' = y_G2
+
+x_P'' = x_G1
+y_P'' = y_G1
+x_Q'' = x_G2
+y_Q'' = y_G2
+
+x_R'' = x_G1
+y_R'' = y_G1
+x_S'' = x_G2
+y_S'' = y_G2
+
+x_T'' = x_G1
+y_T'' = y_G1
+x_U'' = x_G2
+y_U'' = y_G2
+
+x_V'' = x_G1
+y_V'' = y_G1
+x_W'' = x_G2
+y_W'' = y_G2
+
+x_X'' = x_G1
+y_X'' = y_G1
+x_Y'' = x_G2
+y_Y'' = y_G2
+
+x_Z'' = x_G1
+y_Z'' = y_G1
+x_K'' = x_G2
+y_K'' = y_G2
+
+x_L'' = x_G1
+y_L'' = y_G1
+x_M'' = x_G2
+y_M'' = y_G2
+
+x_N'' = x_G1
+y_N'' = y_G1
+x_O'' = x_G2
+y_O'' = y_G2
+
+x_P''' = x_G1
+y_P''' = y_G1
+x_Q''' = x_G2
+y_Q''' = y_G2
+
+x_R''' = x_G1
+y_R''' = y_G1
+x_S''' = x_G2
+y_S''' = y_G2
+
+x_T''' = x_G1
+y_T''' = y_G1
+x_U''' = x_G2
+y_U''' = y_G2
+
+x_V''' = x_G1
+y_V''' = y_G1
+x_W''' = x_G2
+y_W''' = y_G2
+
+x_X''' = x_G1
+y_X''' = y_G1
+x_Y''' = x_G2
+y_Y''' = y_G2
+
+x_Z''' = x_G1
+y_Z''' = y_G1
+x_K''' = x_G2
+y_K''' = y_G2
+
+x_L''' = x_G1
+y_L''' = y_G1
+x_M''' = x_G2
+y_M''' = y_G2
+
+x_N''' = x_G1
+y_N''' = y_G1
+x_O''' = x_G2
+y_O''' = y_G2
+
+x_P'''' = x_G1
+y_P'''' = y_G1
+x_Q'''' = x_G2
+y_Q'''' = y_G2
+
+x_R'''' = x_G1
+y_R'''' = y_G1
+x_S'''' = x_G2
+y_S'''' = y_G2
+
+x_T'''' = x_G1
+y_T'''' = y_G1
+x_U'''' = x_G2
+y_U'''' = y_G2
+
+x_V'''' = x_G1
+y_V'''' = y_G1
+x_W'''' = x_G2
+y_W'''' = y_G2
+
+x_X'''' = x_G1
+y_X'''' = y_G1
+x_Y'''' = x_G2
+y_Y'''' = y_G2
+
+x_Z'''' = x_G1
+y_Z'''' = y_G1
+x_K'''' = x_G2
+y_K'''' = y_G2
+
+x_L'''' = x_G1
+y_L'''' = y_G1
+x_M'''' = x_G2
+y_M'''' = y_G2
+
+x_N'''' = x_G1
+y_N'''' = y_G1
+x_O'''' = x_G2
+y_O'''' = y_G2
+
+x_P''''' = x_G1
+y_P''''' = y_G1
+x_Q''''' = x_G2
+y_Q''''' = y_G2
+
+x_R''''' = x_G1
+y_R''''' = y_G1
+x_S''''' = x_G2
+y_S''''' = y_G2
+
+x_T''''' = x_G1
+y_T''''' = y_G1
+x_U''''' = x_G2
+y_U''''' = y_G2
+
+x_V''''' = x_G1
+y_V''''' = y_G1
+x_W''''' = x_G2
+y_W''''' = y_G2
+
+x_X''''' = x_G1
+y_X''''' = y_G1
+x_Y''''' = x_G2
+y_Y''''' = y_G2
+
+x_Z''''' = x_G1
+y_Z''''' = y_G1
+x_K''''' = x_G2
+y_K''''' = y_G2
+
+x_L''''' = x_G1
+y_L''''' = y_G1
+x_M''''' = x_G2
+y_M''''' = y_G2
+
+x_N''''' = x_G1
+y_N''''' = y_G1
+x_O''''' = x_G2
+y_O''''' = y_G2
+
+x_P'''''' = x_G1
+y_P'''''' = y_G1
+x_Q'''''' = x_G2
+y_Q'''''' = y_G2
+
+x_R'''''' = x_G1
+y_R'''''' = y_G1
+x_S'''''' = x_G2
+y_S'''''' = y_G2
+
+x_T'''''' = x_G1
+y_T'''''' = y_G1
+x_U'''''' = x_G2
+y_U'''''' = y_G2
+
+x_V'''''' = x_G1
+y_V'''''' = y_G1
+x_W'''''' = x_G2
+y_W'''''' = y_G2
+
+x_X'''''' = x_G1
+y_X'''''' = y_G1
+x_Y'''''' = x_G2
+y_Y'''''' = y_G2
+
+x_Z'''''' = x_G1
+y_Z'''''' = y_G1
+x_K'''''' = x_G2
+y_K'''''' = y_G2
+
+x_L'''''' = x_G1
+y_L'''''' = y_G1
+x_M'''''' = x_G2
+y_M'''''' = y_G2
+
+x_N'''''' = x_G1
+y_N'''''' = y_G1
+x_O'''''' = x_G2
+y_O'''''' = y_G2
+
+x_P''''''' = x_G1
+y_P''''''' = y_G1
+x_Q''''''' = x_G2
+y_Q''''''' = y_G2
+
+x_R''''''' = x_G1
+y_R''''''' = y_G1
+x_S''''''' = x_G2
+y_S''''''' = y_G2
+
+x_T''''''' = x_G1
+y_T''''''' = y_G1
+x_U''''''' = x_G2
+y_U''''''' = y_G2
+
+x_V''''''' = x_G1
+y_V''''''' = y_G1
+x_W''''''' = x_G2
+y_W''''''' = y_G2
+
+x_X''''''' = x_G1
+y_X''''''' = y_G1
+x_Y''''''' = x_G2
+y_Y''''''' = y_G2
+
+x_Z''''''' = x_G1
+y_Z''''''' = y_G1
+x_K''''''' = x_G2
+y_K''''''' = y_G2
+
+x_L''''''' = x_G1
+y_L''''''' = y_G1
+x_M''''''' = x_G2
+y_M''''''' = y_G2
+
+x_N''''''' = x_G1
+y_N''''''' = y_G1
+x_O''''''' = x_G2
+y_O''''''' = y_G2
+
+x_P'''''''' = x_G1
+y_P'''''''' = y_G1
+x_Q'''''''' = x_G2
+y_Q'''''''' = y_G2
+
+x_R'''''''' = x_G1
+y_R'''''''' = y_G1
+x_S'''''''' = x_G2
+y_S'''''''' = y_G2
+
+x_T'''''''' = x_G1
+y_T'''''''' = y_G1
+x_U'''''''' = x_G2
+y_U'''''''' = y_G2
+
+x_V'''''''' = x_G1
+y_V'''''''' = y_G1
+x_W'''''''' = x_G2
+y_W'''''''' = y_G2
+
+x_X'''''''' = x_G1
+y_X'''''''' = y_G1
+x_Y'''''''' = x_G2
+y_Y'''''''' = y_G2
+
+x_Z'''''''' = x_G1
+y_Z'''''''' = y_G1
+x_K'''''''' = x_G2
+y_K'''''''' = y_G2
+
+x_L'''''''' = x_G1
+y_L'''''''' = y_G1
+x_M'''''''' = x_G2
+y_M'''''''' = y_G2
+
+x_N'''''''' = x_G1
+y_N'''''''' = y_G1
+x_O'''''''' = x_G2
+y_O'''''''' = y_G2
+
+x_P''''''''' = x_G1
+y_P''''''''' = y_G1
+x_Q''''''''' = x_G2
+y_Q''''''''' = y_G2
+
+x_R''''''''' = x_G1
+y_R''''''''' = y_G1
+x_S''''''''' = x_G2
+y_S''''''''' = y_G2
+
+x_T''''''''' = x_G1
+y_T''''''''' = y_G1
+x_U''''''''' = x_G2
+y_U''''''''' = y_G2
+
+x_V''''''''' = x_G1
+y_V''''''''' = y_G1
+x_W''''''''' = x_G2
+y_W''''''''' = y_G2
+
+x_X''''''''' = x_G1
+y_X''''''''' = y_G1
+x_Y''''''''' = x_G2
+y_Y''''''''' = y_G2
+
+x_Z''''''''' = x_G1
+y_Z''''''''' = y_G1
+x_K''''''''' = x_G2
+y_K''''''''' = y_G2
+
+x_L''''''''' = x_G1
+y_L''''''''' = y_G1
+x_M''''''''' = x_G2
+y_M''''''''' = y_G2
+
+x_N''''''''' = x_G1
+y_N''''''''' = y_G1
+x_O''''''''' = x_G2
+y_O''''''''' = y_G2
+
+x_P'''''''''' = x_G1
+y_P'''''''''' = y_G1
+x_Q'''''''''' = x_G2
+y_Q'''''''''' = y_G2
+
+x_R'''''''''' = x_G1
+y_R'''''''''' = y_G1
+x_S'''''''''' = x_G2
+y_S'''''''''' = y_G2
+
+x_T'''''''''' = x_G1
+y_T'''''''''' = y_G1
+x_U'''''''''' = x_G2
+y_U'''''''''' = y_G2
+
+x_V'''''''''' = x_G1
+y_V'''''''''' = y_G1
+x_W'''''''''' = x_G2
+y_W'''''''''' = y_G2
+
+x_X'''''''''' = x_G1
+y_X'''''''''' = y_G1
+x_Y'''''''''' = x_G2
+y_Y'''''''''' = y_G2
+
+x_Z'''''''''' = x_G1
+y_Z'''''''''' = y_G1
+x_K'''''''''' = x_G2
+y_K'''''''''' = y_G2
+
+x_L'''''''''' = x_G1
+y_L'''''''''' = y_G1
+x_M'''''''''' = x_G2
+y_M'''''''''' = y_G2
+
+x_N'''''''''' = x_G1
+y_N'''''''''' = y_G1
+x_O'''''''''' = x_G2
+y_O'''''''''' = y_G2
+
+x_P''''''''''' = x_G1
+y_P''''''''''' = y_G1
+x_Q''''''''''' = x_G2
+y_Q''''''''''' = y_G2
+
+x_R''''''''''' = x_G1
+y_R''''''''''' = y_G1
+x_S''''''''''' = x_G2
+y_S''''''''''' = y_G2
+
+x_T''''''''''' = x_G1
+y_T''''''''''' = y_G1
+x_U''''''''''' = x_G2
+y_U''''''''''' = y_G2
+
+x_V''''''''''' = x_G1
+y_V''''''''''' = y_G1
+x_W''''''''''' = x_G2
+y_W''''''''''' = y_G2
+
+x_X''''''''''' = x_G1
+y_X''''''''''' = y_G1
+x_Y''''''''''' = x_G2
+y_Y''''''''''' = y_G2
+
+x_Z''''''''''' = x_G1
+y_Z''''''''''' = y_G1
+x_K''''''''''' = x_G2
+y_K''''''''''' = y_G2
+
+x_L''''''''''' = x_G1
+y_L''''''''''' = y_G1
+x_M''''''''''' = x_G2
+y_M''''''''''' = y_G2
+
+x_N''''''''''' = x_G1
+y_N''''''''''' = y_G1
+x_O''''''''''' = x_G2
+y_O''''''''''' = y_G2
+
+x_P'''''''''''' = x_G1
+y_P'''''''''''' = y_G1
+x_Q'''''''''''' = x_G2
+y_Q'''''''''''' = y_G2
+
+x_R'''''''''''' = x_G1
+y_R'''''''''''' = y_G1
+x_S'''''''''''' = x_G2
+y_S'''''''''''' = y_G2
+
+x_T'''''''''''' = x_G1
+y_T'''''''''''' = y_G1
+x_U'''''''''''' = x_G2
+y_U'''''''''''' = y_G2
+
+x_V'''''''''''' = x_G1
+y_V'''''''''''' = y_G1
+x_W'''''''''''' = x_G2
+y_W'''''''''''' = y_G2
+
+x_X'''''''''''' = x_G1
+y_X'''''''''''' = y_G1
+x_Y'''''''''''' = x_G2
+y_Y'''''''''''' = y_G2
+
+x_Z'''''''''''' =
+```
+[GENERATED END]
+
+
+=== Task 9 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Specify and verify in Cryptol the BLS key generation procedure `KeyGen_rep` using HKDF-SHA256 and Montgomery arithmetic, including the properties `keygen_finish_integer`, `keygen_finish_bv`, and `le_bytes_from_limbs_rep4_prop` over the defined 256/512-bit representations.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+module KeyGen where
+
+import Parameters
+import HashToCurveE2
+import HashToCurveE4
+import HashToCurveE6
+import HashToCurveE8
+import HashToCurveE12
+import HashToCurveE16
+import HashToCurveE20
+import HashToCurveE24
+import HashToCurveE32
+import HashToCurveE40
+import HashToCurveE48
+import HashToCurveE56
+import HashToCurveE64
+import HashToCurveE72
+import HashToCurveE80
+import HashToCurveE88
+import HashToCurveE96
+import HashToCurveE104
+import HashToCurveE112
+import HashToCurveE120
+import HashToCurveE128
+import HashToCurveE136
+import HashToCurveE144
+import HashToCurveE152
+import HashToCurveE160
+import HashToCurveE168
+import HashToCurveE176
+import HashToCurveE184
+import HashToCurveE192
+import HashToCurveE200
+import HashToCurveE208
+import HashToCurveE216
+import HashToCurveE224
+import HashToCurveE232
+import HashToCurveE240
+import HashToCurveE248
+import HashToCurveE256
+import HashToCurveE264
+import HashToCurveE272
+import HashToCurveE280
+import HashToCurveE288
+import HashToCurveE296
+import HashToCurveE304
+import HashToCurveE312
+import HashToCurveE320
+import HashToCurveE328
+import HashToCurveE336
+import HashToCurveE344
+import HashToCurveE352
+import HashToCurveE360
+import HashToCurveE368
+import HashToCurveE376
+import HashToCurveE384
+import HashToCurveE392
+import HashToCurveE400
+import HashToCurveE408
+import HashToCurveE416
+import HashToCurveE424
+import HashToCurveE432
+import HashToCurveE440
+import HashToCurveE448
+import HashToCurveE512
+import HashToCurveE576
+import HashToCurveE640
+import HashToCurveE704
+import HashToCurveE768
+import HashToCurveE832
+import HashToCurveE896
+import HashToCurveE960
+import HashToCurveE1024
+import HashToCurveE1088
+import HashToCurveE1152
+import HashToCurveE1216
+import HashToCurveE1280
+import HashToCurveE1344
+import HashToCurveE1408
+import HashToCurveE1472
+import HashToCurveE1536
+import HashToCurveE1592
+import HashToCurveE1656
+import HashToCurveE1720
+import HashToCurveE1784
+import HashToCurveE1848
+import HashToCurveE1912
+import HashToCurveE1976
+import HashToCurveE2040
+import HashToCurveE2104
+import HashToCurveE2168
+import HashToCurveE2232
+import HashToCurveE2296
+import HashToCurveE2360
+import HashToCurveE2424
+import HashToCurveE2488
+import HashToCurveE2552
+import HashToCurveE2616
+import HashToCurveE2680
+import HashToCurveE2744
+import HashToCurveE2808
+import HashToCurveE2872
+import HashToCurveE2936
+import HashToCurveE3000
+import HashToCurveE3064
+import HashToCurveE3128
+import HashToCurveE3192
+import HashToCurveE3256
+import HashToCurveE3320
+import HashToCurveE3384
+import HashToCurveE3448
+import HashToCurveE3512
+import HashToCurveE3576
+import HashToCurveE3640
+import HashToCurveE3704
+import HashToCurveE3768
+import HashToCurveE3832
+import HashToCurveE3896
+import HashToCurveE3960
+import HashToCurveE4024
+import HashToCurveE4088
+import HashToCurveE4152
+import HashToCurveE4216
+import HashToCurveE4280
+import HashToCurveE4344
+import HashToCurveE4408
+import HashToCurveE4472
+import HashToCurveE4536
+import HashToCurveE4600
+import HashToCurveE4664
+import HashToCurveE4728
+import HashToCurveE4792
+import HashToCurveE4856
+import HashToCurveE4920
+import HashToCurveE4984
+import HashToCurveE5048
+import HashToCurveE5112
+import HashToCurveE5176
+import HashToCurveE5240
+import HashToCurveE5304
+import HashToCurveE5368
+import HashToCurveE5432
+import HashToCurveE5496
+import HashToCurveE5560
+import HashToCurveE5624
+import HashToCurveE5688
+import HashToCurveE5752
+import HashToCurveE5816
+import HashToCurveE5880
+import HashToCurveE5944
+import HashToCurveE6008
+import HashToCurveE6072
+import HashToCurveE6136
+import HashToCurveE6200
+import HashToCurveE6264
+import HashToCurveE6328
+import HashToCurveE6392
+import HashToCurveE6456
+import HashToCurveE6520
+import HashToCurveE6584
+import HashToCurveE6648
+import HashToCurveE6712
+import HashToCurveE6776
+import HashToCurveE6840
+import HashToCurveE6904
+import HashToCurveE6968
+import HashToCurveE7032
+import HashToCurveE7096
+import HashToCurveE7160
+import HashToCurveE7224
+import HashToCurveE7288
+import HashToCurveE7352
+import HashToCurveE7416
+import HashToCurveE7480
+import HashToCurveE7544
+import HashToCurveE7608
+import HashToCurveE7672
+import HashToCurveE7736
+import HashToCurveE7800
+import HashToCurveE7864
+import HashToCurveE7928
+import HashToCurveE7992
+import HashToCurveE8056
+import HashToCurveE8120
+import HashToCurveE8184
+import HashToCurveE8248
+import HashToCurveE8312
+import HashToCurveE8376
+import HashToCurveE8440
+import HashToCurveE8504
+import HashToCurveE8568
+import HashToCurveE8632
+import HashToCurveE8696
+import HashToCurveE8760
+import HashToCurveE8824
+import HashToCurveE8888
+import HashToCurveE8952
+import HashToCurveE9016
+import HashToCurveE9080
+import HashToCurveE9144
+import HashToCurveE9208
+import HashToCurveE9272
+import HashToCurveE9336
+import HashToCurveE9400
+import HashToCurveE9464
+import HashToCurveE9528
+import HashToCurveE9592
+import HashToCurveE9656
+import HashToCurveE9720
+import HashToCurveE9784
+import HashToCurveE9848
+import HashToCurveE9912
+import HashToCurveE9976
+import HashToCurveE10040
+import HashToCurveE10104
+import HashToCurveE10168
+import HashToCurveE10232
+import HashToCurveE10296
+import HashToCurveE10360
+import HashToCurveE10424
+import HashToCurveE10488
+import HashToCurveE10552
+import HashToCurveE10616
+import HashToCurveE10680
+import HashToCurveE10744
+import HashToCurveE10808
+import HashToCurveE10872
+import HashToCurveE10936
+import HashToCurveE10996
+import HashToCurveE11060
+import HashToCurveE11124
+import HashToCurveE11188
+import HashToCurveE11252
+import HashToCurveE11316
+import HashToCurveE11380
+import HashToCurveE11444
+import HashToCurveE11508
+import HashToCurveE11572
+import HashToCurveE11636
+import HashToCurveE11700
+import HashToCurveE11764
+import HashToCurveE11828
+import HashToCurveE11892
+import HashToCurveE11956
+import HashToCurveE12020
+import HashToCurveE12084
+import HashToCurveE12148
+import HashToCurveE12212
+import HashToCurveE12276
+import HashToCurveE12340
+import HashToCurveE12404
+import HashToCurveE12468
+import HashToCurveE12532
+import HashToCurveE12596
+import HashToCurveE12660
+import HashToCurveE12724
+import HashToCurveE12788
+import HashToCurveE12852
+import HashToCurveE12916
+import HashToCurveE12980
+import HashToCurveE13044
+import HashToCurveE13108
+import HashToCurveE13172
+import HashToCurveE13236
+import HashToCurveE13300
+import HashToCurveE13364
+import HashToCurveE13428
+import HashToCurveE13492
+import HashToCurveE13556
+import HashToCurveE13620
+import HashToCurveE13684
+import HashToCurveE13748
+import HashToCurveE13812
+import HashToCurveE13876
+import HashToCurveE13940
+import HashToCurveE14004
+import HashToCurveE14068
+import HashToCurveE14132
+import HashToCurveE14196
+import HashToCurveE14260
+import HashToCurveE14324
+import HashToCurveE14388
+import HashToCurveE14452
+import HashToCurveE14516
+import HashToCurveE14580
+import HashToCurveE14644
+import HashToCurveE14708
+import HashToCurveE14772
+import HashToCurveE14836
+import HashToCurveE14900
+import HashToCurveE14964
+import HashToCurveE15028
+import HashToCurveE15092
+import HashToCurveE15156
+import HashToCurveE15220
+import HashToCurveE15284
+import HashToCurveE15348
+import HashToCurveE15412
+import HashToCurveE15476
+import HashToCurveE15540
+import HashToCurveE15604
+import HashToCurveE15668
+import HashToCurveE15732
+import HashToCurveE15796
+import HashToCurveE15860
+import HashToCurveE15924
+import HashToCurveE15988
+import HashToCurveE16052
+import HashToCurveE16116
+import HashToCurveE16180
+import HashToCurveE16244
+import HashToCurveE16308
+import HashToCurveE16372
+import HashToCurveE16436
+import HashToCurveE16500
+import HashToCurveE16564
+import HashToCurveE16628
+import HashToCurveE16692
+import HashToCurveE16756
+import HashToCurveE16820
+import HashToCurveE16884
+import HashToCurveE16948
+import HashToCurveE17012
+import HashToCurveE17076
+import HashToCurveE17140
+import HashToCurveE17204
+import HashToCurveE17268
+import HashToCurveE17332
+import HashToCurveE17396
+import HashToCurveE17460
+import HashToCurveE17524
+import HashToCurveE17588
+import HashToCurveE17652
+import HashToCurveE17716
+import HashToCurveE17780
+import HashToCurveE17844
+import HashToCurveE17908
+import HashToCurveE17972
+import HashToCurveE18036
+import HashToCurveE18100
+import HashToCurveE18164
+import HashToCurveE18228
+import HashToCurveE18292
+import HashToCurveE18356
+import HashToCurveE18420
+import HashToCurveE18484
+import HashToCurveE18548
+import HashToCurveE18612
+import HashToCurveE18676
+import HashToCurveE18740
+import HashToCurveE18804
+import HashToCurveE18868
+import HashToCurveE18932
+import HashToCurveE18996
+import HashToCurveE19060
+import HashToCurveE19124
+import HashToCurveE19188
+import HashToCurveE19252
+import HashToCurveE19316
+import HashToCurveE19380
+import HashToCurveE19444
+import HashToCurveE19508
+import HashToCurveE19572
+import HashToCurveE19636
+import HashToCurveE19700
+import HashToCurveE19764
+import HashToCurveE19828
+import HashToCurveE19892
+import HashToCurveE19956
+import HashToCurveE20020
+import HashToCurveE20084
+import HashToCurveE20148
+import HashToCurveE20212
+import HashToCurveE20276
+import HashToCurveE20340
+import HashToCurveE20404
+import HashToCurveE20468
+import HashToCurveE20532
+import HashToCurveE20596
+import HashToCurveE20660
+import HashToCurveE20724
+import HashToCurveE20788
+import HashToCurveE20852
+import HashToCurveE20916
+import HashToCurveE20980
+import HashToCurveE21044
+import HashToCurveE21108
+import HashToCurveE21172
+import HashToCurveE21236
+import HashToCurveE21300
+import HashToCurveE21364
+import HashToCurveE21428
+import HashToCurveE21492
+import HashToCurveE21556
+import HashToCurveE21620
+import HashToCurveE21684
+import HashToCurveE21748
+import HashToCurveE21812
+import HashToCurveE21876
+import HashToCurveE21940
+import HashToCurveE21996
+import HashToCurveE2
+```
+[GENERATED END]
+
+
+=== Task 10 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module `Names` that defines the given parameters, types, functions, primitive declarations, and the property `enc_correct : [64] -> Bit` asserting `x == enc (enc x)` for all 64-bit inputs, matching the structure implied by the excerpt.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Names where
+
+parameter
+  type k : #
+  type constraint (fin k, k >= 1)
+
+type n = 2^^k - 1
+
+type m = 2^^32 - 1
+
+type l = 2^^64 - 1
+
+x : [64]
+x = 0x123456789abcdef0
+
+y : [64]
+y = 0x123456789abcdeff
+
+z : [64]
+z = 0x123456789abcdeff
+
+f : {a} (fin a) => [a] -> [a]
+f x = x
+
+g : {a} (fin a) => [a] -> [a]
+g x = x
+
+h : {a} (fin a) => [a] -> [a]
+h x = x
+
+i : {a} (fin a) => [a] -> [a]
+i x = x
+
+j : {a} (fin a) => [a] -> [a]
+j x = x
+
+k : {a} (fin a) => [a] -> [a]
+k x = x
+
+l : {a} (fin a) => [a] -> [a]
+l x = x
+
+m : {a} (fin a) => [a] -> [a]
+m x = x
+
+n : {a} (fin a) => [a] -> [a]
+n x = x
+
+o : {a} (fin a) => [a] -> [a]
+o x = x
+
+p : {a} (fin a) => [a] -> [a]
+p x = x
+
+q : {a} (fin a) => [a] -> [a]
+q x = x
+
+r : {a} (fin a) => [a] -> [a]
+r x = x
+
+s : {a} (fin a) => [a] -> [a]
+s x = x
+
+t : {a} (fin a) => [a] -> [a]
+t x = x
+
+u : {a} (fin a) => [a] -> [a]
+u x = x
+
+v : {a} (fin a) => [a] -> [a]
+v x = x
+
+w : {a} (fin a) => [a] -> [a]
+w x = x
+
+x : {a} (fin a) => [a] -> [a]
+x x = x
+
+y : {a} (fin a) => [a] -> [a]
+y x = x
+
+z : {a} (fin a) => [a] -> [a]
+z x = x
+
+property enc_correct x = x == enc (enc x)
+```
+[GENERATED END]
+
+
+=== Task 11 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: In Cryptol, define bitvector update functions `update` and `updateEnd` on 16-bit words and properties `wordUpdate`, `wordUpdate2`, `wordUpdateEnd`, and `wordUpdateEnd2` that verify these functions match both mask-based and index-based formulations for indices `y < 16`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+update : [16] -> [4] -> [4] -> [16]
+update x y v = x && ~m || v << y
+  where m = 0xf << y
+
+updateEnd : [16] -> [4] -> [4] -> [16]
+updateEnd x y v = x && ~m || v << (16 - y - 4)
+  where m = 0xf << y
+
+property wordUpdate x y v =
+  update x y v == (x @@ ([15, 14, 13, 12] # take `{12} (repeat y))) # v
+
+property wordUpdate2 x y v =
+  update x y v == (x @@ ([15, 14, 13, 12] # take `{12} (repeat (15 - y)))) # v
+
+property wordUpdateEnd x y v =
+  updateEnd x y v == (x @@ ([15, 14, 13, 12] # take `{12} (repeat y))) # v
+
+property wordUpdateEnd2 x y v =
+  updateEnd x y v == (x @@ ([15, 14, 13, 12] # take `{12} (repeat (15 - y)))) # v
+```
+[GENERATED END]
+
+
+=== Task 12 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the function `xor : {a} ([a], [a]) -> [a]` as element-wise inequality on two sequences, and define `check24` as a property asserting that for all 4-bit `x` and `y`, `xor` equals the built-in bitwise XOR `(^)` and that this holds for all values.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+xor : {a} ([a], [a]) -> [a]
+xor (x, y) = [i != j | i <- x | j <- y]
+
+check24 = all (\x -> all (\y -> xor (x, y) == x ^ y)) xs
+  where
+    xs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+```
+[GENERATED END]
+
+
+=== Task 13 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: In Cryptol, define the sequence `xs` as given and the value `check28` that asserts the list comprehension `[ x == y | (x,y) <- xs ]` is equal to `~zero`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+xs = [ (x,y) | x <- [1,2,3], y <- [4,5,6] ]
+
+check28 = ~zero == [ x == y | (x,y) <- xs ]
+```
+[GENERATED END]
+
+
+=== Task 14 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: In Cryptol, reproduce these parameterized sequence type declarations and their constant zero definitions, ensuring that the arithmetic in the sequence length expressions is well-typed and equivalent (e.g., for f/g, ff/gg, jj/kk).
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type f n = [n+1]
+zero : {n} f n
+zero = 0
+
+type ff n = [2*n]
+zero : {n} ff n
+zero = 0
+
+type gg n = [3*n]
+zero : {n} gg n
+zero = 0
+
+type jj n = [4*(n+1)]
+zero : {n} jj n
+zero = 0
+
+type kk n = [5*(n-1)]
+zero : {n} kk n
+zero = 0
+```
+[GENERATED END]
+
+
+=== Task 15 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines the submodules A, S, F, I, and M as given, using a type alias T = [8], an interface submodule S exposing x : T, a functor submodule F using x to define y = 2 * x, and an instantiation M = F { I } with I.x = 28.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+submodule A where
+  type T = [8]
+
+submodule S where
+  import submodule A
+
+  x : T
+  x = 10
+
+submodule F where
+  import submodule S
+
+  y : T
+  y = 2 * x
+
+submodule I where
+  import submodule A
+
+  x : T
+  x = 28
+
+submodule M = submodule F { submodule I }
+```
+[GENERATED END]
+
+
+=== Task 16 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Specify the ML-DSA key generation, signing, and verification API and define the property MLDSAIsCorrect that states a signature produced by Sign with keys from KeyGen always verifies with Verify for all messages and contexts within the given type constraints.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Asymmetric::Signature::MLDSA::Reference where
+
+import Common::utils(BVtoZ)
+
+type constraint ValidContext c = (fin c, c <= 2^^32 - 1)
+type constraint ValidMessage m = (fin m, m <= 2^^32 - 1)
+
+KeyGen : {n} (fin n) => ([n], [n]) -> ([n], [n])
+KeyGen (x, y) = (x', y')
+    where
+        x' = BVtoZ x
+        y' = BVtoZ y
+
+Sign : {n, c, m} (ValidContext c, ValidMessage m, fin n) => ([n], [c], [m]) -> [n]
+Sign (sk, ctx, msg) = BVtoZ sig
+    where
+        sig = sk + ctx + msg
+
+Verify : {n, c, m} (ValidContext c, ValidMessage m, fin n) => ([n], [c], [m], [n]) -> Bit
+Verify (pk, ctx, msg, sig) = pk == (BVtoZ sig) + ctx + msg
+
+property MLDSAIsCorrect : {n, c, m} (ValidContext c, ValidMessage m, fin n) => [n] -> [n] -> [c] -> [m] -> Bit
+property MLDSAIsCorrect x y ctx msg = Verify (pk, ctx, msg, sig)
+    where
+        (sk, y') = KeyGen (x, y)
+        pk = sk + y'
+        sig = Sign (sk, ctx, msg)
+```
+[GENERATED END]
+
+
+=== Task 17 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module that fully specifies the XMSS parameter interface `Primitive::Asymmetric::Signature::XMSS::Parameters`, including types `h`, `n`, `MessageUpperBound`, `PaddingWidth`, constants `oid`, and hash functions `H` and `H_msg` with the given constraints and signatures.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+module Primitive::Asymmetric::Signature::XMSS::Parameters where
+
+import Common::utils
+import Primitive::Keyless::Hash::SHA256::Instantiations::SHA256
+
+type h = 8
+type n = 32
+
+type MessageUpperBound = 1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+```
+[GENERATED END]
+
+
+=== Task 18 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module `Primitive::Asymmetric::Signature::XMSS::Instantiations::XMSS_SHA2_10_256` that instantiates the generic XMSS specification with the `XMSS_SHA2_10_256_Parameters` parameter set and the `WOTSP_SHA2_256` WOTS instantiation.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Asymmetric::Signature::XMSS::Instantiations::XMSS_SHA2_10_256 =
+    Primitive::Asymmetric::Signature::XMSS::Specification {
+        Parameters = Primitive::Asymmetric::Signature::XMSS::ParameterSets::XMSS_SHA2_10_256,
+        WOTS = Primitive::Asymmetric::Signature::WOTS::Instantiations::WOTSP_SHA2_256
+    }
+```
+[GENERATED END]
+
+
+=== Task 19 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Specify the Keccak/SHA3 bit and byte ordering utilities, including toBytes, fromBytes, reverseBitOrdering, h2b, b2h, and properties proving involution and mutual inversion (e.g., h2bAndb2hInvert, b2hAndh2bInvert, and example properties).
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+module Primitive::Keyless::Hash::Keccak::Utils where
+
+import Common::utils
+
+type Keccak = 1600
+
+toBytes : {n} (fin n) => [n] -> [n /^ 8][8]
+toBytes x = split x
+
+fromBytes : {n} (fin n) => [n /^ 8][8] -> [n]
+fromBytes x = join x
+
+reverseBitOrdering : {n} (fin n) => [n] -> [n]
+reverseBitOrdering x = join (reverse (split x))
+
+h2b : {n} (fin n) => [n] -> [n /^ 8][8]
+h2b x = toBytes (reverseBitOrdering x)
+
+b2h : {n} (fin n) => [n /^ 8][8] -> [n]
+b2h x = reverseBitOrdering (fromBytes x)
+
+property h2bAndb2hInvert x = b2h (h2b x) == x
+
+property b2hAndh2bInvert x = h2b (b2h x) == x
+
+example : Bit
+property example = h2bAndb2hInvert 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+```
+[GENERATED END]
+
+
+=== Task 20 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write Cryptol properties that verify a SHA224::hash function against known test vectors for inputs "abc", the empty string, the 448-bit alphabet string, and the 896-bit alphabet string, matching the specified SHA-224 digest outputs.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Keyless::Hash::SHA2::Tests::SHA224 where
+import Primitive::Keyless::Hash::SHA2::Instantiations::SHA224 as SHA224
+
+property tests = [SHA224::hash "abc" == expected_abc,
+                  SHA224::hash ""    == expected_empty,
+                  SHA224::hash alphabet_448 == expected_alphabet_448,
+                  SHA224::hash alphabet_896 == expected_alphabet_896]
+  where
+    expected_abc = join [
+      0x238015a3, 0xe45e61c1, 0x7be15100, 0x3f65fb21,
+      0x52bfc6a2, 0x24cf8a2c, 0xd72dab7e, 0xcdcc5d5d
+    ]
+
+    expected_empty = join [
+      0xd14a028c, 0x1930daa6, 0x3593c715, 0xfe14112d,
+      0x1526e5f5, 0x6ffc8f01, 0xc1a3ecb7, 0x3eb7d742
+    ]
+
+    alphabet_448 = join [
+      0x6bc1bee2, 0x2e409f96, 0xe93d7e11, 0x7393172a,
+      0xae2d8a57, 0x1e03ac9c, 0x9eb76fac, 0x45af8e51,
+      0x30c81c46, 0xa35ce411, 0xe5fbc119, 0x1a699236,
+      0x6372a3f0, 0xee64113a, 0x721cd114, 0xf6e37b96,
+      0x3ded1415, 0x43a6a2b8, 0x55a2e284, 0xaaadfe1d
+    ]
+
+    expected_alphabet_448 = join [
+      0x20794655, 0x93c97f27, 0xb711d6ba, 0x8880388e,
+      0x935c7089, 0x4f264170, 0x9c69b67a, 0x97163196
+    ]
+
+    alphabet_896 = join [
+      0x6bc1bee2, 0x2e409f96, 0xe93d7e11, 0x7393172a,
+      0xae2d8a57, 0x1e03ac9c, 0x9eb76fac, 0x45af8e51,
+      0x30c81c46, 0xa35ce411, 0xe5fbc119, 0x1a699236,
+      0x6372a3f0, 0xee64113a, 0x721cd114, 0xf6e37b96,
+      0x3ded1415, 0x43a6a2b8, 0x55a2e284, 0xaaadfe1d,
+      0x046d2c76, 0x2a479344, 0x14a674ec, 0xeae3386b,
+      0xfb5a899f, 0x4e7e3f54, 0x521333a9, 0xfb5ccbf2,
+      0x4bd72015, 0x2c850a3a, 0x98aba906, 0x4523aa3a,
+      0x85521abf, 0xf5cc3f4a, 0x9fa0eeb6, 0x71e54759,
+      0x17597a33, 0x1f60fab7, 0x3c6eaaacb, 0x9732bca9,
+      0x230bf60e, 0x229b83df, 0xa33667b1, 0x152b53bb,
+      0x1168b6f1, 0xbdeb4de8, 0x72c727b0, 0x3c67bac9,
+      0x086d2c65, 0xbf62a766, 0xc2f85b2f, 0xff9e8b11,
+      0x00593c30, 0xcfd30d89, 0x137ae15d, 0x1191d0a3,
+      0x90f67e44, 0x373eb764, 0x4d76fdd8, 0x36f1318f,
+      0x19129672, 0x9a8650c7, 0xe99a1f03, 0xea657d81,
+      0x53700322, 0x34c74c7e, 0xe2739a1a, 0x9ef725a8,
+      0x6c8dbb51, 0xe0741634, 0x408602b1, 0x7a25f960,
+      0x181ffef8, 0x660ed6df, 0x2a107c9d, 0x08819deb,
+      0x535e5628, 0xac82cd99, 0x2c48a5e0, 0x5a39aba1,
+      0x7b2ab173, 0x692a5aa8, 0x4aa47f01, 0x760e6d03,
+      0xcb6db526, 0xa3c4693c, 0x1aa85521, 0x55faa3f1,
+      0x8d2b08a5, 0x797c2ca7, 0x20273ec1, 0x52556c2e,
+      0x37b11d61, 0x3691775d, 0x9d78a093, 0x1ae12f10,
+      0x19129672, 0x9a8650c7, 0xe99a1f03, 0xea657d81,
+      0x6c8dbb51, 0xe0741634, 0x408602b1, 0x7a25f960,
+      0x181ffef8, 0x660ed6df, 0x2a107c9d, 0x08819deb,
+      0x535e5628, 0xac82cd99, 0x2c48a5e0, 0x5a39aba1,
+      0x7b2ab173, 0x692a5aa8, 0x4aa47f01, 0x760e6d03,
+      0xcb6db526, 0xa3c4693c, 0x1aa85521, 0x55faa3f1,
+      0x8d2b08a5, 0x797c2ca7, 0x20273ec1, 0x52556c2e,
+      0x37b11d61, 0x3691775d, 0x9d78a093, 0x1ae12f10
+    ]
+
+    expected_alphabet_896 = join [
+      0x953bf5a8, 0x8b5aa76d, 0x0a966e4b, 0x8b255a9e,
+      0x9c532f25, 0x88995a13, 0x3e2a393b, 0x42529b56
+    ]
+```
+[GENERATED END]
+
+
+=== Task 21 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module that defines the given test vector record types and properties to verify HMAC-SHA-384 and its 192-bit truncation against the RFC 4868 section 2.7.1 and 2.7.2.2 test vectors, using an imported HMAC_SHA384 instantiation.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+import HMAC_SHA384
+
+property hmac_sha384_1 = HMAC_SHA384 "key" "The quick brown fox jumps over the lazy dog" == expected where
+    expected = join [
+        0x5b3a97406e717d95f9c60095052b44524051568546089760e94767684565689,
+        0x5087496a91396898597215f1ca7791e0526114166702a0e4a4765095462a5074
+    ]
+
+property hmac_sha384_2 = HMAC_SHA384 "Jefe" "what do ya want for nothing?" == expected where
+    expected = join [
+        0x5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843,
+        0xa3954ba118d174cd9764795040f410ff15f00a30509e27d2a4ec870277d9ad9f
+    ]
+
+property hmac_sha384_3 = HMAC_SHA384 "" "Test With Empty Key" == expected where
+    expected = join [
+        0x90b9d189f67e13d6ceaa65af7092305cc5b16e661ecf7a2d4b054007259ce74a,
+        0x071bcd7640016ed02d0917c69a441dfeab649c0c8af0e5f97f0d3c6a5d1dc827
+    ]
+
+property hmac_sha384_4 = HMAC_SHA384 "JefeJefe" "Test With Truncated Key" == expected where
+    expected = join [
+        0x26504c3c080a00e09656540268a7e86027676655684804112a68517a6266b567,
+        0x56857258765236995ef81246655b6444027307678530577062719b5554a92c77
+    ]
+
+property hmac_sha384_5 = HMAC_SHA384 "Jefe" "Test With Truncated Data" == expected where
+    expected = join [
+        0x097575996c075a50e79f4007a50b715350700a07e02206044077979c270a5f6f,
+        0x41660060556356213a5c028915d76e567a200b44255100e0215f4e74cdf4b576
+    ]
+
+type TestVector = { key : [64][8], data : [128][8], expected : [76][8] }
+
+property hmac_sha384_6 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "Jefe", data = "what do ya want for nothing?", expected = expected }
+    expected = join [
+        0x5b3a97406e717d95f9c60095052b44524051568546089760e94767684565689,
+        0x5087496a91396898597215f1ca7791e0526114166702a0e4a4765095462a5074
+    ]
+
+property hmac_sha384_7 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "JefeJefe", data = "Test With Truncated Key", expected = expected }
+    expected = join [
+        0x26504c3c080a00e09656540268a7e86027676655684804112a68517a6266b567,
+        0x56857258765236995ef81246655b6444027307678530577062719b5554a92c77
+    ]
+
+property hmac_sha384_8 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "Jefe", data = "Test With Truncated Data", expected = expected }
+    expected = join [
+        0x097575996c075a50e79f4007a50b715350700a07e02206044077979c270a5f6f,
+        0x41660060556356213a5c028915d76e567a200b44255100e0215f4e74cdf4b576
+    ]
+
+property hmac_sha384_9 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "", data = "Test With Empty Key", expected = expected }
+    expected = join [
+        0x90b9d189f67e13d6ceaa65af7092305cc5b16e661ecf7a2d4b054007259ce74a,
+        0x071bcd7640016ed02d0917c69a441dfeab649c0c8af0e5f97f0d3c6a5d1dc827
+    ]
+
+property hmac_sha384_10 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "Jefe", data = "what do ya want for nothing?", expected = expected }
+    expected = join [
+        0x5b3a97406e717d95f9c60095052b44524051568546089760e94767684565689,
+        0x5087496a91396898597215f1ca7791e0526114166702a0e4a4765095462a5074
+    ]
+
+property hmac_sha384_11 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "JefeJefe", data = "Test With Truncated Key", expected = expected }
+    expected = join [
+        0x26504c3c080a00e09656540268a7e86027676655684804112a68517a6266b567,
+        0x56857258765236995ef81246655b6444027307678530577062719b5554a92c77
+    }
+
+property hmac_sha384_12 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "Jefe", data = "Test With Truncated Data", expected = expected }
+    expected = join [
+        0x097575996c075a50e79f4007a50b715350700a07e02206044077979c270a5f6f,
+        0x41660060556356213a5c028915d76e567a200b44255100e0215f4e74cdf4b576
+    }
+
+property hmac_sha384_13 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "", data = "Test With Empty Key", expected = expected }
+    expected = join [
+        0x90b9d189f67e13d6ceaa65af7092305cc5b16e661ecf7a2d4b054007259ce74a,
+        0x071bcd7640016ed02d0917c69a441dfeab649c0c8af0e5f97f0d3c6a5d1dc827
+    }
+
+property hmac_sha384_14 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "Jefe", data = "what do ya want for nothing?", expected = expected }
+    expected = join [
+        0x5b3a97406e717d95f9c60095052b44524051568546089760e94767684565689,
+        0x5087496a91396898597215f1ca7791e0526114166702a0e4a4765095462a5074
+    }
+
+property hmac_sha384_15 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "JefeJefe", data = "Test With Truncated Key", expected = expected }
+    expected = join [
+        0x26504c3c080a00e09656540268a7e86027676655684804112a68517a6266b567,
+        0x56857258765236995ef81246655b6444027307678530577062719b5554a92c77
+    }
+
+property hmac_sha384_16 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "Jefe", data = "Test With Truncated Data", expected = expected }
+    expected = join [
+        0x097575996c075a50e79f4007a50b715350700a07e02206044077979c270a5f6f,
+        0x41660060556356213a5c028915d76e567a200b44255100e0215f4e74cdf4b576
+    }
+
+property hmac_sha384_17 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "", data = "Test With Empty Key", expected = expected }
+    expected = join [
+        0x90b9d189f67e13d6ceaa65af7092305cc5b16e661ecf7a2d4b054007259ce74a,
+        0x071bcd7640016ed02d0917c69a441dfeab649c0c8af0e5f97f0d3c6a5d1dc827
+    }
+
+property hmac_sha384_18 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "Jefe", data = "what do ya want for nothing?", expected = expected }
+    expected = join [
+        0x5b3a97406e717d95f9c60095052b44524051568546089760e94767684565689,
+        0x5087496a91396898597215f1ca7791e0526114166702a0e4a4765095462a5074
+    }
+
+property hmac_sha384_19 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "JefeJefe", data = "Test With Truncated Key", expected = expected }
+    expected = join [
+        0x26504c3c080a00e09656540268a7e86027676655684804112a68517a6266b567,
+        0x56857258765236995ef81246655b6444027307678530577062719b5554a92c77
+    }
+
+property hmac_sha384_20 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "Jefe", data = "Test With Truncated Data", expected = expected }
+    expected = join [
+        0x097575996c075a50e79f4007a50b715350700a07e02206044077979c270a5f6f,
+        0x41660060556356213a5c028915d76e567a200b44255100e0215f4e74cdf4b576
+    }
+
+property hmac_sha384_21 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "", data = "Test With Empty Key", expected = expected }
+    expected = join [
+        0x90b9d189f67e13d6ceaa65af7092305cc5b16e661ecf7a2d4b054007259ce74a,
+        0x071bcd7640016ed02d0917c69a441dfeab649c0c8af0e5f97f0d3c6a5d1dc827
+    }
+
+property hmac_sha384_22 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key = "Jefe", data = "what do ya want for nothing?", expected = expected }
+    expected = join [
+        0x5b3a97406e717d95f9c60095052b44524051568546089760e94767684565689,
+        0x5087496a91396898597215f1ca7791e0526114166702a0e4a4765095462a5074
+    }
+
+property hmac_sha384_23 = hmacSHA384 tv.key tv.data == tv.expected where
+    tv = { key
+```
+[GENERATED END]
+
+
+=== Task 22 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define an interface module `Primitive::Symmetric::Cipher::Block::CipherInterface` with type synonyms `KeySize`, `BlockSize`, a finiteness constraint on both, and functions `encrypt` and `decrypt` of type `[KeySize] -> [BlockSize] -> [BlockSize]`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::CipherInterface where
+
+import Common::utils
+
+type KeySize = 128
+
+type BlockSize = 128
+
+encrypt : [KeySize] -> [BlockSize] -> [BlockSize]
+encrypt k m = zero
+
+decrypt : [KeySize] -> [BlockSize] -> [BlockSize]
+decrypt k c = zero
+```
+[GENERATED END]
+
+
+=== Task 23 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Specify the CFB (Cipher Feedback) block cipher mode over an abstract block cipher interface, including encrypt and decrypt functions parameterized by segment size and a property encryptCorrect stating decrypt K IV (encrypt K IV Ps) == Ps for all keys, IVs, and plaintext segments.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Modes::CFB where
+
+import Primitive::Symmetric::Cipher::Block::Interface
+
+parameter
+
+  type S : #
+  type constraint (fin S, S >= 1)
+
+  type constraint (S == 8 * (width (S / 8)))
+
+type CFBKey = [S]
+
+type CFBIV = [S]
+
+type CFBState = [S]
+
+encrypt : {n} (fin n) => CFBKey -> CFBIV -> [n][S] -> [n][S]
+encrypt K IV Ps = Cs
+  where
+    Cs = [blockEncrypt K (IV # P) @ 0 | P <- Ps]
+    IV' = IV # Cs@0
+    Cs' = [blockEncrypt K (IV') @ 0] # Cs
+
+decrypt : {n} (fin n) => CFBKey -> CFBIV -> [n][S] -> [n][S]
+decrypt K IV Cs = Ps
+  where
+    Ps = [C ^ blockEncrypt K (IV # C) @ 0 | C <- Cs]
+    IV' = IV # Cs@0
+    Cs' = [blockEncrypt K (IV') @ 0] # Cs
+
+property encryptCorrect K IV Ps = decrypt K IV (encrypt K IV Ps) == Ps
+```
+[GENERATED END]
+
+
+=== Task 24 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol module `Primitive::Symmetric::Cipher::Block::Simon::Instantiations::Simon128_128` that instantiates the generic Simon block cipher specification for the Simon-128/128 variant with type parameters `n = 64`, `m = 2`, `T = 68`, and `j = 2`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Simon::Instantiations::Simon128_128 =
+    Primitive::Symmetric::Cipher::Block::Simon::Specification where
+
+        type n = 64
+        type m = 2
+        type T = 68
+        type j = 2
+```
+[GENERATED END]
+
+
+=== Task 25 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module `Primitive::Symmetric::Cipher::Block::Simon::Instantiations::Simon128_256` instantiating the generic Simon block cipher specification for the Simon-128/256 variant with parameters `n=64`, `m=4`, `T=72`, and `j=4`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Simon::Instantiations::Simon128_256 =
+    Primitive::Symmetric::Cipher::Block::Simon::Specification where
+
+        type n = 64
+        type m = 4
+        type T = 72
+        type j = 4
+```
+[GENERATED END]
+
+
+=== Task 26 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module Primitive::Symmetric::Cipher::Block::Modes::Tests::AES256_CTR that imports Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_CTR and defines properties aes256_ctr_encrypt_vector and aes256_ctr_decrypt_vector checking AES-256 CTR encrypt/decrypt against the given NIST test vectors.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Modes::Tests::AES256_CTR where
+
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_CTR as AES256_CTR
+
+property aes256_ctr_encrypt_vector = ~zero == AES256_CTR::encrypt k iv plaintext
+    where
+        k = 0x8000000000000000000000000000000000000000000000000000000000000000
+        iv = 0x000102030405060708090a0b0c0d0e0f
+        plaintext = [
+            0x6bc1bee22e409f96e93d7e117393172a,
+            0xae2d8a571e03ac9c9eb76fac45af8e51,
+            0x30c81c46a35ce411e5fbc1191a0a52ef,
+            0xf69f2445df4f9b17ad2b417be66c3710
+        ]
+
+property aes256_ctr_decrypt_vector = ~zero == AES256_CTR::decrypt k iv ciphertext
+    where
+        k = 0x8000000000000000000000000000000000000000000000000000000000000000
+        iv = 0x000102030405060708090a0b0c0d0e0f
+        ciphertext = [
+            0x6bc1bee22e409f96e93d7e117393172a,
+            0xae2d8a571e03ac9c9eb76fac45af8e51,
+            0x30c81c46a35ce411e5fbc1191a0a52ef,
+            0xf69f2445df4f9b17ad2b417be66c3710
+        ]
+```
+[GENERATED END]
+
+
+=== Task 27 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol module `Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES192_CFB` that instantiates the generic CFB block cipher mode with the AES-192 block cipher implementation.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES192_CFB =
+    Primitive::Symmetric::Cipher::Block::Modes::CFB {
+        Primitive::Symmetric::Cipher::Block::AES::Instantiations::AES192
+    }
+```
+[GENERATED END]
+
+
+=== Task 28 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module AES128_CFB that instantiates the generic CFB block cipher mode with AES-128, exposing the resulting AES-128 CFB encryption and decryption functions and any necessary types for keys, blocks, and IVs.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES128_CFB where
+import Primitive::Symmetric::Cipher::Block::Modes::CFB
+import Primitive::Symmetric::Cipher::Block::AES::Instantiations::AES128
+type KeySize = 128
+type BlockSize = 128
+type IVSize = 128
+cfb = CFB { blockSize = BlockSize, encrypt = AES128.encrypt }
+encrypt = cfb.encrypt
+decrypt = cfb.decrypt
+```
+[GENERATED END]
+
+
+=== Task 29 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Specify and verify in Cryptol the HostValues module’s heap-based host value store, including VecRepresentation and MapRepresentation constructors, allocation and lookup functions, and define a property that map_representation_equiv correctly characterizes when two MapRepresentation values are equivalent for a given element comparator and heap.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module HostValues where
+
+import Array
+import Values
+
+type Heap = Array 32
+
+type VecRepresentation a =
+  { heap : Heap
+  , next : [32]
+  , vec  : [10]a
+  }
+
+allocVec : {a} (Literal 10 a) => VecRepresentation a -> (VecRepresentation a, a)
+allocVec v =
+  if v.next >= 10
+  then error "Vector full"
+  else { heap = v.heap
+        , next = v.next + 1
+        , vec  = update v.vec v.next (alloc v.heap)
+        }
+
+lookupVec : {a} (Literal 10 a) => VecRepresentation a -> [32] -> a
+lookupVec v i = v.vec @ i
+
+type MapRepresentation a =
+  { heap : Heap
+  , next : [32]
+  , map  : [10][32]
+  }
+
+allocMap : {a} (Literal 10 a) => MapRepresentation a -> (MapRepresentation a, a)
+allocMap m =
+  if m.next >= 10
+  then error "Map full"
+  else { heap = m.heap
+        , next = m.next + 1
+        , map  = update m.map m.next (alloc m.heap)
+        }
+
+lookupMap : {a} (Literal 10 a) => MapRepresentation a -> [32] -> a
+lookupMap m i = m.map @ i
+
+property map_representation_equiv cmp m1 m2 h =
+  if m1 == m2 /\ h == zero
+  then True
+  else lookupMap m1 (cmp h) == lookupMap m2 (cmp h)
+```
+[GENERATED END]
+
+
+=== Task 30 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification of the AES-128 S-box over GF(2^8), including gf28Mult, gf28Pow, gf28Inverse, aesAffine, aesSBox, the 16×16 aesSBoxTable, and a property cell00 asserting aesSBoxTable @ 0 @ 0 == 0x63.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type GF28 = [8]
+gf28Mult : (GF28, GF28) -> GF28
+gf28Mult (x, y) =
+  pmod (pmult x y)
+    <| x^^8 + x^^4 + x^^3 + x + 1 |>
+gf28Pow : (GF28, [8]) -> GF28
+gf28Pow (n, k) =
+  pow k
+  where
+    sq x = gf28Mult (x, x)
+    odd x = x ! 0
+    pow i =
+      if i == 0
+      then 1
+      else if odd i
+      then gf28Mult (n, sq (pow (i >> 1)))
+      else sq (pow (i >> 1))
+gf28Inverse : GF28 -> GF28
+gf28Inverse x = gf28Pow (x, 254)
+aesAffine : GF28 -> GF28
+aesAffine x =
+  gf28Mult (0x63, x) ^ 0x5
+aesSBox : GF28 -> GF28
+aesSBox x = gf28Inverse (aesAffine x)
+aesSBoxTable = [[aesSBox (i + j * 256) | i <- [0 .. 255]] | j <- [0 .. 15]]
+/* pragma cell00 : property */
+cell00 = aesSBoxTable @ 0 @ 0 == 0x63
+```
+[GENERATED END]
+
+
+=== Task 31 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the functions `usaf : [1][8] -> [10][8] -> [1][8]` and `saf : [1][8] -> [10][8] -> [1][8]` in Cryptol as given, and add a property that they are equal for all inputs `a` and `b` where `0 <= a@0 <= 9`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+usaf : [1][8] -> [10][8] -> [1][8]
+usaf a b = [if x >= y then x else y | x <- a | y <- b]
+
+saf : [1][8] -> [10][8] -> [1][8]
+saf a b = [if x >= y then x else y | x <- a | y <- b]
+```
+[GENERATED END]
+
+
+=== Task 32 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines the given Circle/Displacement/BMI record types and functions (areaCircle, nudgeCircle, calcBMI, calcBMIimp), along with example constants, matching the behavior and types implied by the code excerpt.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Circle = { x : Float64, y : Float64, r : Float64 }
+type Displacement = { dx : Float64, dy : Float64 }
+type BMI = Float64
+
+areaCircle : Circle -> BMI
+areaCircle c = pi * c.r * c.r
+
+nudgeCircle : Circle -> Displacement -> Circle
+nudgeCircle c d = { x = c.x + d.dx, y = c.y + d.dy, r = c.r }
+
+calcBMI : Float64 -> Float64 -> BMI
+calcBMI weight height = weight / (height * height)
+
+calcBMIimp : Float64 -> Float64 -> BMI
+calcBMIimp weight height = if height == 0 then 0 else weight / (height * height)
+
+exampleCircle : Circle
+exampleCircle = { x = 1.0, y = 2.0, r = 3.0 }
+
+exampleDisplacement : Displacement
+exampleDisplacement = { dx = 1.0, dy = 1.0 }
+```
+[GENERATED END]
+
+
+=== Task 33 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification of ECDSA over the NIST P-384 curve, including functions for key initialization, signing, and public verification, plus properties that check the provided P-384 test vectors for point add/subtract/double, scalar multiplication, and twin multiplication.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+module Primitive::Asymmetric::Signature::ECDSA::Tests::P384 where
+
+import Common::utils
+import Primitive::Asymmetric::Signature::ECDSA::Instantiations::P384
+
+property p384_point_add = ecAdd P384 G G == G2
+property p384_point_sub = ecSub P384 G2 G == G
+property p384_point_dbl = ecDbl P384 G == G2
+
+property p384_scalar_mul = ecMul P384 d G == Q
+property p384_twin_mul = ecTwinMul P384 k1 k2 G H == (R, S)
+
+private
+    G  = {x = 0xBAAFCFF9627EB4D57E1A5D6F6C69B745872E808809864CB57714A1404E9CD1E3,
+          y = 0x5441496566682B124167390BFE80C037EDE24A672C18AB666680E247B33648CE,
+          z = 1}
+
+    G2 = {x = 0x16657A56E8664860B3B6663C7932B643476B6863487F3146E180F853F6866068,
+          y = 0x66A7130644666286372661DB0F635FD765305AD456C25B57C7514B85A45DD82B,
+          z = 1}
+
+    d  = 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+```
+[GENERATED END]
+
+
+=== Task 34 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines the newtype CplxInt over Integer with complex addition, multiplication, equality, and properties cplxAddAssoc, cplxMulAssoc, and cplxMulDistrib verifying associativity of addition, associativity of multiplication, and left distributivity of multiplication over addition.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+newtype CplxInt = { real : Integer, imag : Integer }
+
+cplxAdd : CplxInt -> CplxInt -> CplxInt
+cplxAdd x y = CplxInt { real = x.real + y.real, imag = x.imag + y.imag }
+
+cplxMul : CplxInt -> CplxInt -> CplxInt
+cplxMul x y = CplxInt { real = x.real * y.real - x.imag * y.imag,
+                        imag = x.real * y.imag + x.imag * y.real }
+
+cplxEq : CplxInt -> CplxInt -> Bit
+cplxEq x y = x.real == y.real && x.imag == y.imag
+
+cplxAddAssoc : CplxInt -> CplxInt -> CplxInt -> Bit
+cplxAddAssoc x y z = cplxEq (cplxAdd x (cplxAdd y z)) (cplxAdd (cplxAdd x y) z)
+
+cplxMulAssoc : CplxInt -> CplxInt -> CplxInt -> Bit
+cplxMulAssoc x y z = cplxEq (cplxMul x (cplxMul y z)) (cplxMul (cplxMul x y) z)
+
+cplxMulDistrib : CplxInt -> CplxInt -> CplxInt -> Bit
+cplxMulDistrib x y z = cplxEq (cplxMul x (cplxAdd y z)) (cplxAdd (cplxMul x y) (cplxMul x z))
+```
+[GENERATED END]
+
+
+=== Task 35 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that includes the given tuple-based fold functions and a property `foldFunctionInverse` stating that `foldFunction' (foldFunction x y z) y z == x` for all 8-bit `x` and 16-bit `y`, `z`, suitable for formal verification.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+foldFunction : ([8], [16], [16]) -> [16] -> [16] -> [8]
+foldFunction (a, b, c) x y = a
+foldFunction' : ([8], [16], [16]) -> [16] -> [16] -> [8]
+foldFunction' x y z = foldFunction x y z
+/* pragma foldFunctionInverse : property */
+foldFunctionInverse x y z =
+  foldFunction' (foldFunction x y z) y z == x
+```
+[GENERATED END]
+
+
+=== Task 36 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines the AES-128 inverse MixColumns transformation over GF(2^8) using precomputed multiplication tables (for 0x0e, 0x0b, 0x0d, 0x09), including the types GF28, State, the helper functions gf28Mult, toBytes, fromBytes, and a function invMixColumns : State -> State matching the standard AES inverse MixColumns step.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type GF28 = [8]
+gf28Mult : (GF28, GF28) -> GF28
+gf28Mult (x, y) =
+  pmod (pmult x y)
+    0b10001101  // irreducible polynomial for GF(2^8)
+toBytes : [32] -> [4][8]
+toBytes x = split (split x)
+fromBytes : [4][8] -> [32]
+fromBytes x = join (join x)
+type State = [4][4]GF28
+invMixColumns : State -> State
+invMixColumns state =
+  [fromBytes
+    [gf28Mult (0x0e, b) ^ gf28Mult (0x0b, a) ^ gf28Mult (0x0d, d) ^ gf28Mult (0x09, c)
+    | a <- row
+    | b <- col @ 1
+    | c <- col @ 2
+    | d <- col @ 3
+    ]
+  | row <- state
+  | col <- transpose row
+```
+[GENERATED END]
+
+
+=== Task 37 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the Cryptol function `doRounds` and supporting types and functions (`Nb`, `State`, `RoundKey`, `addRoundKey`) as given, where `doRounds` iteratively applies a round function `rnd` over an initial key, a sequence of round keys, and a final key, and verify with a `property` that for any choice of `rnd`, initial key, round keys, final key, and input state, `doRounds` produces the same final state as computing the initial AddRoundKey followed by the same sequence of `rnd` applications unrolled explicitly.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Nb = 4
+type State = [4][Nb]Bit
+type RoundKey = State
+
+addRoundKey : {n} (fin n) => State -> [n]RoundKey -> RoundKey
+addRoundKey pt rks =
+  pt ^ (rks ! 0)
+
+doRounds : {n}
+  (fin n, n >= 1)
+  => ([RoundKey] -> State -> State)
+  -> RoundKey
+  -> [n]RoundKey
+  -> RoundKey
+  -> State
+  -> State
+doRounds rnd initKey rkss finalKey st =
+  finalKey ^ (rounds ! 0)
+  where
+    rounds = [initKey] # [rnd rk s | rk <- rkss | s <- rounds]
+```
+[GENERATED END]
+
+
+=== Task 38 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: In Cryptol, define the DES S-box 6 constant `sbox6 : [4][16][4]` with the given 4×16 table of 4-bit values exactly as specified here.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+sbox6 : [4][16][4]
+sbox6 =
+  [[13,
+    2,
+    8,
+    4,
+    6,
+    15,
+    11,
+    1,
+    10,
+    9,
+    3,
+    14,
+    5,
+    0,
+    12,
+    7],
+  [1,
+    14,
+    2,
+    13,
+    8,
+    11,
+    5,
+    6,
+    15,
+    0,
+    3,
+    10,
+    12,
+    14,
+    9,
+    7],
+  [4,
+    11,
+    2,
+    14,
+    15,
+    0,
+    8,
+    13,
+    3,
+    12,
+    7,
+    1,
+    10,
+    6,
+    9,
+    5],
+  [5,
+    8,
+    1,
+    13,
+    10,
+    3,
+    4,
+    2,
+    14,
+    15,
+    14,
+    7,
+    11,
+    9,
+    12,
+    6]]
+```
+[GENERATED END]
+
+
+=== Task 39 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines the DES block cipher as a value `DES : Cipher 64 64` (with `encrypt`/`decrypt` wired through the DES round function, key schedule, permutations, and S-boxes as in the NIST standard) and a property `testsPass` that checks `DES.encrypt` on given test message/key pairs matches the expected ciphertexts.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+module Primitive::Symmetric::Cipher::Block::DES where
+
+import Common::Utils
+import Primitive::Symmetric::Cipher::Block::CipherInterface
+
+type KeySize = 64
+type BlockSize = 64
+type ROUNDS = 16
+
+type RoundKey = [48]
+type State = [32]
+
+type KeySchedule = [ROUNDS]RoundKey
+
+SBox : [8][6][4]
+SBox =
+  [[0x1b, 0xbd, 0x0d, 0x2a, 0x4c, 0x5a, 0x72, 0x99, 0xb3, 0xcb, 0xe7, 0xfe, 0xea, 0xd6, 0xf8, 0xd9,
+    0x56, 0x7b, 0x16, 0x02, 0x2c, 0x0e, 0x30, 0x1f, 0x3d, 0x55, 0x6d, 0x4e, 0x64, 0x46, 0x6a, 0x42,
+    0x01, 0x23, 0x0f, 0x25, 0x47, 0x5f, 0x77, 0x9e, 0xb4, 0xcf, 0xe1, 0xdb, 0xf7, 0xde, 0xf1, 0xd3,
+    0x5c, 0x79, 0x1e, 0x0a, 0x26, 0x08, 0x32, 0x1d, 0x3b, 0x53, 0x6b, 0x4d, 0x65, 0x47, 0x69, 0x41],
+   [0x15, 0xbf, 0x0b, 0x28, 0x40, 0x58, 0x70, 0x9b, 0xbb, 0xd3, 0xee, 0xf4, 0xea, 0xd6, 0xf8, 0xd9,
+    0x57, 0x7a, 0x17, 0x03, 0x29, 0x0b, 0x33, 0x1c, 0x3a, 0x52, 0x6a, 0x4c, 0x64, 0x4c, 0x6e, 0x46,
+    0x01, 0x25, 0x0f, 0x2d, 0x45, 0x5d, 0x75, 0x9c, 0xbc, 0xdf, 0xe1, 0xdb, 0xf7, 0xde, 0xf1, 0xd3,
+    0x58, 0x7b, 0x1e, 0x0a, 0x26, 0x08, 0x32, 0x1d, 0x3b, 0x53, 0x6b, 0x4d, 0x65, 0x47, 0x69, 0x41],
+   [0x16, 0xc0, 0x0c, 0x2f, 0x47, 0x5f, 0x77, 0x9e, 0xba, 0xd2, 0xef, 0xf5, 0xeb, 0xe7, 0xcf, 0xe8,
+    0x59, 0x7c, 0x1b, 0x0d, 0x20, 0x02, 0x34, 0x1f, 0x3d, 0x55, 0x6d, 0x4f, 0x67, 0x49, 0x6b, 0x43,
+    0x08, 0x2c, 0x0e, 0x22, 0x4a, 0x52, 0x7a, 0x93, 0xaf, 0xc7, 0xe9, 0xe1, 0xdb, 0xf7, 0xde, 0xf1,
+    0x5a, 0x7d, 0x1a, 0x0c, 0x24, 0x06, 0x38, 0x13, 0x3b, 0x53, 0x6b, 0x4d, 0x65, 0x47, 0x69, 0x41],
+   [0x17, 0xc1, 0x0d, 0x2a, 0x48, 0x50, 0x78, 0x91, 0xb9, 0xd1, 0xe8, 0xf4, 0xea, 0xe6, 0xce, 0xe9,
+    0x5a, 0x7d, 0x1a, 0x0c, 0x24, 0x06, 0x38, 0x13, 0x3b, 0x53, 0x6b, 0x4d, 0x65, 0x47, 0x69, 0x41,
+    0x09, 0x2d, 0x0f, 0x23, 0x4b, 0x53, 0x7b, 0x92, 0xbac, 0xc4, 0xe6, 0xea, 0xe6, 0xce, 0xe9, 0xed,
+    0x5b, 0x7e, 0x19, 0x0f, 0x27, 0x09, 0x3b, 0x16, 0x3e, 0x56, 0x6e, 0x40, 0x68, 0x4a, 0x6c, 0x44],
+   [0x13, 0xc5, 0x01, 0x26, 0x44, 0x5c, 0x74, 0x9d, 0xb7, 0xcf, 0xe2, 0xf8, 0xec, 0xe0, 0xc8, 0xcc,
+    0x5f, 0x82, 0x0f, 0x28, 0x40, 0x58, 0x70, 0x99, 0xb1, 0xd9, 0xe0, 0xf8, 0xf4, 0xfca, 0xf6, 0xf0,
+    0x59, 0x7c, 0x1b, 0x0d, 0x24, 0x06, 0x38, 0x13, 0x3b, 0x53, 0x6b, 0x4d, 0x65, 0x47, 0x69, 0x41,
+    0x0a, 0x2e, 0x0c, 0x20, 0x48, 0x50, 0x78, 0x91, 0xb9, 0xd1, 0xe8, 0xf4, 0xea, 0xe6, 0xce, 0xe9],
+   [0x12, 0xc4, 0x0a, 0x2d, 0x4b, 0x53, 0x7b, 0x92, 0xbac, 0xc4, 0xe6, 0xea, 0xe6, 0xce, 0xe9, 0xed,
+    0x5b, 0x7e, 0x19, 0x0f, 0x27, 0x09, 0x3b, 0x16, 0x3e, 0x56, 0x6e, 0x40, 0x68, 0x4a, 0x6c, 0x44,
+    0x0b, 0x2f, 0x0d, 0x21, 0x49, 0x51, 0x79, 0x90, 0xb8, 0xd0, 0xe9, 0xef, 0xec, 0xe8, 0xe4, 0xe0,
+    0x5d, 0x80, 0x0d, 0x2a, 0x48, 0x50, 0x78, 0x91, 0xb9, 0xd1, 0xe8, 0xf4, 0xea, 0xe6, 0xce, 0xe9],
+   [0x14, 0xc6, 0x0c, 0x2f, 0x4d, 0x55, 0x7d, 0x94, 0xbca, 0xd2, 0xe9, 0xf5, 0xeb, 0xe7, 0xcf, 0xe8,
+    0x5b, 0x7e, 0x19, 0x0f, 0x27, 0x09, 0x3b, 0x16, 0x3e, 0x56, 0x6e, 0x40, 0x68, 0x4a, 0x6c, 0x44,
+    0x0d, 0x31, 0x0f, 0x23, 0x4b, 0x53, 0x7b, 0x92, 0xbac, 0xc4, 0xe6, 0xea, 0xe6, 0xce, 0xe9, 0xed,
+    0x5a, 0x7d, 0x1a, 0x0c, 0x24, 0x06, 0x38, 0x13, 0x3b, 0x53, 0x6b, 0x4d, 0x65, 0x47, 0x69, 0x41],
+   [0x11, 0xc7, 0x09, 0x2e, 0x4c, 0x54, 0x7c, 0x95, 0xbda, 0xd3, 0xea, 0xf6, 0xfa, 0xf6, 0xf8, 0xf4,
+    0x5d, 0x80, 0x0d, 0x2a, 0x48, 0x50, 0x78, 0x91, 0xb9, 0xd1, 0xe8, 0xf4, 0xea, 0xe6, 0xce, 0xe9,
+    0x5b, 0x7e, 0x19, 0x0f, 0x27, 0x09, 0x3b, 0x16, 0x3e, 0x56, 0x6e, 0x40, 0x68, 0x4a, 0x6c, 0x44,
+    0x0c, 0x30, 0x0e, 0x22, 0x4a, 0x52, 0x7a, 0x93, 0xaf, 0xc7, 0xe9, 0xe1, 0xdb, 0xf7, 0xde, 0xf1]]
+
+PBox : [32][8]
+PBox =
+  [16, 7, 20, 21, 29, 12, 28, 17, 1, 15, 23, 26, 5, 18, 31, 10,
+   2, 8, 24, 14, 32, 27, 3, 9, 19, 13, 30, 6, 22, 11, 4, 25, 0]
+
+IPBox : [64][8]
+IPBox =
+  [58, 50, 42, 34, 26, 18, 10, 2,
+   60, 52, 44, 36, 28, 20, 12, 4,
+   62, 54, 46, 38, 30, 22, 14, 6,
+   64, 56, 48, 40, 32, 24, 16, 8,
+   57, 49, 41, 33, 25, 17, 9, 1,
+   59, 51, 43, 35, 27, 19, 11, 3,
+   61, 53, 45, 37, 29, 21, 13, 5,
+   63, 55, 47, 39, 31, 23, 15, 7]
+
+EBox : [48][8]
+EBox =
+  [32, 1, 2, 3, 4, 5,
+   4, 5, 6, 7, 8, 9,
+   8, 9, 10, 11, 12, 13,
+   12, 13, 14, 15, 16, 17,
+   16, 17, 18, 19, 20, 21,
+   20, 21, 22, 23, 24, 25,
+   24, 25, 26, 27, 28, 29,
+   28, 29, 30, 31, 32, 1]
+
+R1Box : [48][8]
+R1Box =
+  [14, 17, 11, 24, 1, 5,
+   3, 28, 15, 6, 21, 10,
+   23, 19, 12, 4, 26, 8,
+   16, 7, 27, 20, 13, 2,
+   41, 52, 31, 37, 47, 55,
+   30, 40, 51, 45, 33, 48,
+   44, 49, 39, 56, 34, 53,
+   46, 42, 50, 36, 29, 32]
+
+R2Box : [48][8]
+R2Box =
+  [14, 17, 11, 24, 1, 5,
+   3, 28, 15, 6, 21, 10,
+   23, 19, 12, 4, 26, 8,
+   16, 7, 27, 20, 13, 2,
+   41, 52, 31, 37, 47, 55,
+   30, 40, 51, 45, 33, 48,
+   44, 49, 39, 56, 34, 53,
+   46, 42, 50, 36, 29, 32]
+
+R3Box : [48][8]
+R3Box =
+  [15, 18, 12, 25, 2, 6,
+   4, 29, 16, 7, 22, 11,
+   24, 20, 13, 5, 28, 9,
+   17, 8,
+```
+[GENERATED END]
+
+
+=== Task 40 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol property rfctest03 that verifies the given ChaCha20 stream cipher implementation (using qround, cdround, core, kexp, iround, stream, and encrypt over types Round, Block, Key, Nonce, and Counter) correctly encrypts the specified msg with the given key and counter to produce the expected out test vector.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Round = [16][32]
+type Block = [64][8]
+type Key = [32][8]
+type Nonce = [12][8]
+type Counter = [32][8]
+qround : [4][32] -> [4][32]
+qround [a0, b0, c0, d0] =
+  [a2, b4, c2, d4]
+  where
+    a1 = a0 + b0
+    d1 = d0 ^ a1
+    d2 = d1 <<< 16
+    c1 = c0 + d2
+    b1 = b0 ^ c1
+    b2 = b1 <<< 12
+    a2 = a1 + b2
+    d3 = d2 ^ a2
+    d4 = d3 <<< 8
+    c2 = c1 + d4
+    b3 = b2 ^ c2
+    b4 = b3 <<< 7
+cdround : [4][32] -> [4][32]
+cdround [a0, b0, c0, d0] =
+  [a2, b4, c2, d4]
+  where
+    a1 = a0 + b0
+    d1 = d0 ^ a1
+    d2 = d1 <<< 17
+    c1 = c0 + d2
+    b1 = b0 ^ c1
+    b2 = b1 <<< 19
+    a2 = a1 + b2
+    d3 = d2 ^ a2
+    d4 = d3 <<< 10
+    c2 = c1 + d4
+    b3 = b2 ^ c2
+    b4 = b3 <<< 15
+core : Round -> Round
+core r =
+  join
+    (groupByBy
+      (\x -> x)
+      (iround
+        (groupByBy
+          (\x -> x)
+          (cdround
+            (groupByBy
+              (\x -> x)
+              (cdround
+                (groupByBy
+                  (\x -> x)
+                  (cdround
+                    (groupByBy
+                      (\x -> x)
+                      (cdround
+                        (groupByBy
+                          (\x -> x)
+                          (cdround
+                            (groupByBy
+                              (\x -> x)
+                              (cdround
+                                (groupByBy
+                                  (\x -> x)
+                                  (cdround
+                                    (groupByBy
+                                      (\x -> x)
+                                      (cdround
+                                        (groupByBy
+                                          (\x -> x)
+                                          (cdround (groupByBy (\x -> x) r))
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+  )
+kexp : Key -> [16][32]
+kexp k =
+  [k @ 0,
+  k @ 1,
+  k @ 2,
+  k @ 3,
+  k @ 4,
+  k @ 5,
+  k @ 6,
+  k @ 7,
+  k @ 8,
+  k @ 9,
+  k @ 10,
+  k @ 11,
+  k @ 12,
+  k @ 13,
+  k @ 14,
+  k @ 15]
+iround : Round -> Round
+iround r =
+  [(r @ 0) + (r @ 12),
+  (r @ 1) + (r @ 13),
+  (r @ 2) + (r @ 14),
+  (r @ 3) + (r @ 15),
+  (r @ 4) + (r @ 15),
+  (r @ 5) + (r @ 16),
+  (r @ 6) + (r @ 17),
+  (r @ 7) + (r @ 18),
+  (r @ 8) + (r @ 18),
+  (r @ 9) + (r @ 19),
+  (r @ 10) + (r @ 20),
+  (r @ 11) + (r @ 21),
+  (r @ 12) + (r @ 22),
+  (r @ 13) + (r @ 23),
+  (r @ 14) + (r @ 24),
+  (r @ 15) + (r @ 25)]
+stream : Key -> Nonce -> Counter -> Block
+stream k n c =
+  split
+    ((join (core (kexp k))) # (join (cexp c)) # (join (nexp n)))
+nexp : Nonce -> Round
+nexp n =
+  [n @ 0,
+  n @ 1,
+  n @ 2,
+  n @ 3,
+  n @ 4,
+  n @ 5,
+  n @ 6,
+  n @ 7,
+  n @ 8,
+  n @ 9,
+  n @ 10,
+  n @ 11,
+  0,
+  0,
+  0,
+  0]
+cexp : Counter -> Round
+cexp c =
+  [c @ 0,
+  c @ 1,
+  c @ 2,
+  c @ 3,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  c @ 0,
+  c @ 1,
+  c @ 2,
+  c @ 3]
+encrypt : Key -> Nonce -> Counter -> Block -> Block
+encrypt k n c m =
+  split
+    ((join (core (kexp k))) ^ (join (cexp c)) ^ (join (nexp n)) ^ (join m))
+rfctest03 =
+  encrypt k n c msg == out
+  where
+    k =
+      [0x00,
+      0x01,
+      0x02,
+      0x03,
+      0x04,
+      0x05,
+      0x06,
+      0x07,
+      0x08,
+      0x09,
+      0x0a,
+      0x0b,
+      0x0c,
+      0x0d,
+      0x0e,
+      0x0f]
+    n =
+      [0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00]
+    c = [0x00, 0x00, 0x00, 0x00]
+    msg = "Test Vector"
+    out =
+      [0x76,
+      0x2c,
+      0x82,
+      0x7e,
+      0x10,
+      0x6b,
+      0x27,
+      0x53,
+      0x2f,
+      0x09,
+      0x88,
+      0x7b,
+      0x12,
+      0x4e,
+      0x2a,
+      0x97]
+```
+[GENERATED END]
+
+
+=== Task 41 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification of the ChaCha20 stream cipher with types Round = [16][32], Block = [64][8], Key = [32][8], Nonce = [12][8], Counter = [32], functions qround, cdround, kexp, iround, core, stream, encrypt, and a property rfctest02 that checks encrypt (zero # [1]) 1 (zero # [2]) msg equals the given RFC test vector out for the provided msg bytes.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Round = [16][32]
+type Block = [64][8]
+type Key = [32][8]
+type Nonce = [12][8]
+type Counter = [32]
+qround : ([32], [32], [32], [32]) -> ([32], [32], [32], [32])
+qround (a, b, c, d) =
+  (a + b, (a + b) <<< 16, c ^ a, (c ^ a) <<< 12)
+cdround : ([32], [32], [32], [32]) -> ([32], [32], [32], [32])
+cdround (a, b, c, d) =
+  (a + b, (a + b) <<< 12, c ^ a, (c ^ a) <<< 8)
+kexp : ([32], [32], [32], [32]) -> ([32], [32], [32], [32])
+kexp (x, y, z, w) =
+  (x ^ (y <<< 16), (x ^ (y <<< 16)) <<< 12, z ^ x, (z ^ x) <<< 8)
+iround : Round -> Round
+iround r =
+  r @@ [(0, 4, 8, 12),
+        (1, 5, 9, 13),
+        (2, 6, 10, 14),
+        (3, 7, 11, 15),
+        (0, 5, 10, 15),
+        (1, 6, 11, 12),
+        (2, 7, 8, 13),
+        (3, 4, 9, 14)]
+core : Key -> Nonce -> Counter -> Round
+core k n c =
+  foldl iround
+    ([(k @ 0),
+      (k @ 1),
+      (k @ 2),
+      (k @ 3),
+      (k @ 4),
+      (k @ 5),
+      (k @ 6),
+      (k @ 7),
+      (k @ 8),
+      (k @ 9),
+      (k @ 10),
+      (k @ 11),
+      (k @ 12),
+      (k @ 13),
+      (k @ 14),
+      (k @ 15)])
+    (take
+      (repeat
+        [(n @ 0),
+        (n @ 1),
+        (n @ 2),
+        (n @ 3),
+        (c, 0, 0, 0)]))
+stream : Key -> Nonce -> Counter -> Block
+stream k n c =
+  split (join (map (iround . kexp) (iround (iround (iround (core k n c))))))
+encrypt : Key -> Nonce -> Counter -> Block -> Block
+encrypt k n c m = m ^ (stream k n c)
+/* pragma rfctest02 : property */
+rfctest02 =
+  encrypt (zero # [1]) 1 (zero # [2]) msg == out
+  where
+    msg = [0x6bc1bee2, 0x2e409f96, 0xe93d7e11, 0x7393172a, 0xae2d8a57,
+           0x1e03ac9c, 0x9eb76fac, 0x45af8e51]
+    out = [0x3ad77bb4, 0x0d7a3358, 0x6b4d5a83, 0x9c1ae2d1, 0x11ae7f38,
+           0x7bdb0aad, 0x432c81a5, 0xe7f3051e]
+```
+[GENERATED END]
+
+
+=== Task 42 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines the type AESTestVector 128 and the function mct_ecb_decrypt_128 : [128] -> [128] -> [100](AESTestVector 128) implementing the AES-128 Monte Carlo Test for ECB decryption using aesDecryptBlock and aes128DecryptSchedule from SuiteB, including generation of 100 test vectors from an initial key and ciphertext as described.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES128_ECB
+import Primitive::Symmetric::Cipher::Block::AES
+
+type AESTestVector n = {key : [n], pt : [n], ct : [n]}
+mct_ecb_decrypt_128 : [128] -> [128] -> [100](AESTestVector 128)
+mct_ecb_decrypt_128 k c =
+  take `{100}
+  [AESTestVector
+    {key = k,
+     pt = aesDecryptBlock (aes128DecryptSchedule k) ct',
+     ct = ct'}
+    | ct' <- cs]
+  where
+    cs = [c] # [zero] # cs
+```
+[GENERATED END]
+
+
+=== Task 43 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define in Cryptol the function `mct_ecb_decrypt_192 : [192] -> [128] -> [100](AESTestVector 192)` and any required types and helpers so that it models the AES-192 Monte Carlo Test for ECB decryption, producing 100 test vectors of key, plaintext, and ciphertext derived from iterative AES-192 decryption and key schedule updates.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::AES::Instantiations::AES192
+
+
+type AESTestVector n = {key : [n], pt : [128], ct : [128]}
+mct_ecb_decrypt_192 : [192] -> [128] -> [100](AESTestVector 192)
+mct_ecb_decrypt_192 k iv =
+  take `{100}
+  [({key = k', pt = pt, ct = c})
+  | (c, k') <- aes192_decryption_loop k iv
+  | pt <- repeat iv]
+aes192_decryption_loop k iv =
+  loop `{100} k (aes192_key_schedule k) iv
+  where
+    loop i k ks ci =
+      if i == 0
+      then []
+      else [(decrypt ks ci, nextKey k)] # loop (i - 1) k' ks'
+      where
+        (k', ks') = aes192_nextKeySchedule ks
+        decrypt ks ct = aes192_decrypt ct ks
+nextKey k ks =
+  if k == zero
+  then ks
+  else k
+```
+[GENERATED END]
+
+
+=== Task 44 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol property tcId1069 that verifies the AES256_KeyWrap padded authenticated-encryption function KWP_AE, instantiated from Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_KeyWrap, maps the 8-bit plaintext 0xe0 under the 256-bit key 0x2644ccf9d7c419a437c954c8141cbb2d60f57de10a5393554a14ccc72229e286 to the ciphertext 0xda510b1d9a10255380655980a3a73536, using a helper predicate check_KWP_AE key pt expected_ct = KWP_AE key pt == expected_ct and asserting testPassed == check_KWP_AE key pt ct.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_KeyWrap
+
+
+check_KWP_AE key pt expected_ct = KWP_AE key pt == expected_ct
+/* pragma tcId1069 : property */
+tcId1069 =
+  testPassed == check_KWP_AE key pt ct
+  where
+    testPassed = True
+    key =
+      0x2644ccf9d7c419a437c954c8141cbb2d60f57de10a5393554a14ccc72229e286
+    pt = 0xe0
+    ct = 0xda510b1d9a10255380655980a3a73536
+```
+[GENERATED END]
+
+
+=== Task 45 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the property `tcId1080` that checks, for AES-256 Key Wrap with padding in AE mode, that encrypting the plaintext `0x06` under the key `0x3ea9325069ed93a96c331bdd6dd766ec64bbba83a72c69ed75df55043fb0bfd1` with `KWP_AE` produces the expected ciphertext `0x40a9c42012ba38211b800e6e313b6876`, using the helper `check_KWP_AE key pt expected_ct = KWP_AE key pt == expected_ct`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_KeyWrap
+
+
+check_KWP_AE key pt expected_ct = KWP_AE key pt == expected_ct
+/* pragma tcId1080 : property */
+tcId1080 =
+  testPassed == check_KWP_AE key pt ct
+  where
+    testPassed = True
+    key =
+      0x3ea9325069ed93a96c331bdd6dd766ec64bbba83a72c69ed75df55043fb0bfd1
+    pt = 0x06
+    ct = 0x40a9c42012ba38211b800e6e313b6876
+```
+[GENERATED END]
+
+
+=== Task 46 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the Cryptol function `pi16' : [16][64] -> [16][64]` that permutes a 16-word (64-bit each) Threefish state using the index order `[0, 15, 2, 11, 6, 13, 4, 9, 14, 1, 8, 5, 10, 3, 12, 7 : [4]]`, and add a property that this permutation is bijective (has an inverse).
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+pi16' : [16][64] -> [16][64]
+pi16' xs = xs @@ [0, 15, 2, 11, 6, 13, 4, 9, 14, 1, 8, 5, 10, 3, 12, 7 : [4]]
+```
+[GENERATED END]
+
+
+=== Task 47 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: In Cryptol, define the type alias `Dom n = {lo : [n], sz : [n]}` and the functions `interval : {n} (fin n) => [n] -> [n] -> Dom n` and `range : {n} (fin n) => [n] -> [n] -> Dom n` where `interval l s = {lo = l, sz = s}` and `range lo hi = interval lo (hi - lo)`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Dom n = {lo : [n], sz : [n]}
+interval : {n} (fin n) => [n] -> [n] -> Dom n
+interval l s = {lo = l, sz = s}
+range : {n} (fin n) => [n] -> [n] -> Dom n
+range lo hi = interval lo (hi - lo)
+```
+[GENERATED END]
+
+
+=== Task 48 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: In Cryptol, define the type alias `Dom n = {lo : [n], sz : [n]}`, the function `interval : {n} (fin n) => [n] -> [n] -> Dom n` with `interval l s = {lo = l, sz = s}`, and the constant `top : {n} (fin n) => Dom n` defined as `top = interval 0 (~0)`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Dom n = {lo : [n], sz : [n]}
+interval : {n} (fin n) => [n] -> [n] -> Dom n
+interval l s = {lo = l, sz = s}
+top : {n} (fin n) => Dom n
+top = interval 0 (~0)
+```
+[GENERATED END]
+
+
+=== Task 49 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines the type `Dom n = {lo : [n], sz : [n]}`, the functions `mem : {n} (fin n) => Dom n -> [n] -> Bit`, `ubounds : {n} (fin n) => Dom n -> ([n], [n])`, `ule : {n} (fin n) => Dom n -> Dom n -> Bit`, the property `correct_ule : {n} (fin n, n >= 1) => Dom n -> Dom n -> [n] -> [n] -> Bit` expressing that `ule a b` implies `x <= y` for all `x` and `y` in the respective domains, and a property instance `o4 = correct_ule` specialized to `n = 16`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Dom n = {lo : [n], sz : [n]}
+mem : {n} (fin n) => Dom n -> [n] -> Bit
+mem a x = x - a.lo <= a.sz
+ubounds : {n} (fin n) => Dom n -> ([n], [n])
+ubounds a =
+  if carry a.lo a.sz then (0, ~0) else (a.lo, a.lo + a.sz)
+ule : {n} (fin n) => Dom n -> Dom n -> Bit
+ule a b =
+  diff <= b.sz
+  where
+    (_, diff) = (ubounds b).0 - (ubounds a).1
+correct_ule : {n}
+  (fin n, n >= 1) =>
+    Dom n -> Dom n -> [n] -> [n] -> Bit
+correct_ule a b x y =
+  ule a b ==> mem a x ==> mem b y ==> x <= y
+/* pragma o4 : property */
+o4 = correct_ule`{16}
+```
+[GENERATED END]
+
+
+=== Task 50 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: In Cryptol, define the type `Dom n = {lo : [n], sz : [n]}`, functions `interval`, `singleton`, `neg`, `singleton_neg` as in the excerpt, and the property `i08` that asserts `singleton_neg` instantiated at width 16 (i.e., `singleton_neg`{16}) holds for all 16-bit inputs, suitable for verification with a solver.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Dom n = {lo : [n], sz : [n]}
+interval : {n} (fin n) => [n] -> [n] -> Dom n
+interval l s = {lo = l, sz = s}
+singleton : {n} (fin n) => [n] -> Dom n
+singleton x = interval x 0
+neg : {n} (fin n) => Dom n -> Dom n
+neg a =
+  if a.sz == 0 then singleton (~a.lo)
+  else interval (~hi) lo
+  where
+    hi = a.lo + a.sz
+    lo = ~hi - a.sz
+singleton_neg : {n} (fin n) => [n] -> Bit
+property i08 = singleton_neg`{16}
+```
+[GENERATED END]
+
+
+=== Task 51 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol property `Salsa20_passes_tests` that checks the given Salsa20 core implementation (using `quarterround`, `rowround`, `columnround`, `doubleround`, `littleendian`, `littleendian_state`, `littleendian_state_inverse`, `Salsa20_rounds`, and `Salsa20 : [32] -> [64][8] -> [64][8]`) satisfies the three specified 20-round test vectors by equating its outputs to the provided 64-byte expected sequences and conjoining the results.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+quarterround : [16][32] -> [16][32]
+quarterround [y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15] =
+  [z0, z1, z2, z3, z4, z5, z6, z7, z8, z9, z10, z11, z12, z13, z14, z15]
+  where
+    z0 = y0 + y4
+    z4 = y4 ^ z0 <<< 0x7
+    z8 = y8 + z4
+    z12 = z4 ^ z8 <<< 0x9
+    z1 = y1 + z8
+    z5 = z8 ^ z1 <<< 0xd
+    z9 = y9 + z5
+    z13 = z5 ^ z9 <<< 0x12
+    z2 = y2 + z9
+    z6 = z9 ^ z2 <<< 0xd
+    z10 = y10 + z6
+    z14 = z6 ^ z10 <<< 0x9
+    z3 = y3 + z14
+    z7 = z14 ^ z3 <<< 0x7
+    z11 = y11 + z7
+    z15 = z7 ^ z11 <<< 0x12
+rowround : [16][32] -> [16][32]
+rowround [y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15] =
+  [z0, z1, z2, z3, z4, z5, z6, z7, z8, z9, z10, z11, z12, z13, z14, z15]
+  where
+    [z0, z1, z2, z3] = quarterround [y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15]
+    [z4, z5, z6, z7] = quarterround [y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15, y0, y1, y2, y3]
+    [z8, z9, z10, z11] = quarterround [y8, y9, y10, y11, y12, y13, y14, y15, y0, y1, y2, y3, y4, y5, y6, y7]
+    [z12, z13, z14, z15] = quarterround [y12, y13, y14, y15, y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11]
+columnround : [16][32] -> [16][32]
+columnround [y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15] =
+  [z0, z1, z2, z3, z4, z5, z6, z7, z8, z9, z10, z11, z12, z13, z14, z15]
+  where
+    [z0, z4, z8, z12] = quarterround [y0, y4, y8, y12, y1, y5, y9, y13, y2, y6, y10, y14, y3, y7, y11, y15]
+    [z1, z5, z9, z13] = quarterround [y1, y5, y9, y13, y0, y4, y8, y12, y3, y7, y11, y15, y2, y6, y10, y14]
+    [z2, z6, z10, z14] = quarterround [y2, y6, y10, y14, y1, y5, y9, y13, y0, y4, y8, y12, y3, y7, y11, y15]
+    [z3, z7, z11, z15] = quarterround [y3, y7, y11, y15, y2, y6, y10, y14, y1, y5, y9, y13, y0, y4, y8, y12]
+doubleround : [16][32] -> [16][32]
+doubleround y = columnround (rowround y)
+littleendian : [64][8] -> [64][32]
+littleendian x = [join xi | xi <- split x]
+littleendian_state : [64][8] -> [16][32]
+littleendian_state x = split (littleendian x)
+littleendian_state_inverse : [16][32] -> [64][8]
+littleendian_state_inverse x = join (map littleendian x)
+Salsa20_rounds : [32] -> [16][32] -> [16][32]
+Salsa20_rounds n x =
+  if n == 0
+  then x
+  else Salsa20_rounds (n - 1) (doubleround x)
+Salsa20 : [32] -> [64][8] -> [64][8]
+Salsa20 n x = littleendian_state_inverse (Salsa20_rounds n (littleendian_state x))
+Salsa20_passes_tests =
+  (Salsa20 20 (join "k12345678901234567890123456789012")
+    == split
+      0x9e0e6d89d62ef72be4e50a8b95a7500e9f1fca5fad02a5a0774740a27c94ce74)
+    && (Salsa20 20 (join "k12345678901234567890123456789012")
+      == split
+        0x9e0e6d89d62ef72be4e50a8b95a7500e9f1fca5fad02a5a0774740a27c94ce74)
+    && (Salsa20 20 (join "k12345678901234567890123456789012")
+      == split
+        0x9e0e6d89d62ef72be4e50a8b95a7500e9f1fca5fad02a5a0774740a27c94ce74)
+```
+[GENERATED END]
+

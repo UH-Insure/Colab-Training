@@ -1,0 +1,6 @@
+module Primitive::Symmetric::Cipher::Block::Simon::Instantiations::Simon128_256 =
+  Primitive::Symmetric::Cipher::Block::Simon::Specification where
+    type n = 64
+    type m = 4
+    type T = 72
+    type j = 4

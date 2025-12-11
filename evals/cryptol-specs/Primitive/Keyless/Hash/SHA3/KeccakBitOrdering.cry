@@ -1,0 +1,74 @@
+module Primitive::Keyless::Hash::SHA3::KeccakBitOrdering where
+
+toBytes : {n} (fin n) => [8*n] -> [n][8]
+toBytes s = reverse (split (reverse s))
+
+fromBytes : {n} (fin n) => [n][8] -> [8*n]
+fromBytes bs = reverse (join (reverse bs))
+
+reverseBitOrdering : {m} [m] -> [m]
+reverseBitOrdering msg
+    | m == inf => join (map reverse (groupBy`{8} msg))
+    | fin m => (flipped_full_bytes # flipped_remainder) where
+                        type Bytes = 8 * (m / 8)
+        flipped_full_bytes = join (map reverse (groupBy`{each=8, parts=m / 8} (take`{Bytes} msg)))
+        flipped_remainder = reverse (drop`{Bytes} msg)
+
+reverseBitOrderingInvolutes : {m} (fin m) => [m] -> Bit
+property reverseBitOrderingInvolutes msg = reReverse == msg where
+    reReverse = reverseBitOrdering (reverseBitOrdering msg)
+
+truncate : {n, m} (fin m, fin n, m >= n, m % (2 * HexDigit) == 0) => [m] -> [n]
+truncate msg = reverseBitOrdering (take (reverseBitOrdering msg))
+
+reverseMatchesh2b : {m} (fin m, m > 0) => [2 * m * HexDigit] -> Bool
+property reverseMatchesh2b msg = h2b msg == reverseBitOrdering msg
+
+truncateAndReverseMatchesh2b : {m, n} (fin m, m > 0, n > 0, 2 * HexDigit * m >= n) => [2 * m * HexDigit] -> Bool
+property truncateAndReverseMatchesh2b msg = h2b_result == rt_result where
+    h2b_result = h2b`{n} msg
+    rt_result = reverseBitOrdering (truncate`{n} msg)
+
+reverseMatchesb2h : {n} (fin n, n > 0) => [2 * n * HexDigit] -> Bool
+reverseMatchesb2h msg = b2h msg == reverseBitOrdering msg
+
+reverseAndTruncateMatchesb2h : {n} (fin n, n > 0) => [n] -> Bool
+property reverseAndTruncateMatchesb2h bits = b2h_result == rev_result where
+    b2h_result = truncate`{n} (b2h bits)
+    rev_result = reverseBitOrdering bits
+
+type HexDigit = 4
+
+h2b: {n, m} (fin m, m > 0, n > 0, n <= 8 * m) => [2 * m * HexDigit] -> [n]
+h2b msg = S where
+        H = groupBy`{HexDigit} msg
+            H8 = map zext H : [2 * m][8]
+        hs = [16 * H8 @ (2 * i) + H8 @ (2 * i + 1) | i <- [0..m-1]]
+            bs = map reverse hs
+        T = join bs
+        S = take`{n} T
+
+property h2bExampleWorks = h2b`{14} H == S where
+    H = 0xA32E
+    S = 0b11000101011101
+
+b2h : {n} (fin n, n > 0) => [n] -> [2 * (n /^ 8) * HexDigit]
+b2h S = H where
+            T = S # (zero : [(8 - (n % 8)) % 8])     type m = n /^ 8
+        b = [[ T@(8 * i + j) | j <- [0..7]] | i <- [0..m-1]]
+        h = [reverse bs | bs <- b]
+        Hs = [split`{2, HexDigit} hi | hi <- h]
+    H = join (join Hs)
+
+zero_length_is_correct : Integer -> Bool
+property zero_length_is_correct n = (-n) % 8 == (8 - (n % 8)) % 8
+
+h2bAndb2hInvert : {m} (fin m, m > 0) => [2 * m * HexDigit] -> Bool
+property h2bAndb2hInvert msg = b2h (h2b`{2 * m * HexDigit} msg) == msg
+
+h2bAndb2hInvertForShortStrings : {m, n} (fin m, m > 0, n > 0, n /^ (2 * HexDigit) == m) => [n] -> Bool
+property h2bAndb2hInvertForShortStrings msg = b2h (h2b`{n} hexMsg) == hexMsg where
+    hexMsg = reverseBitOrdering ((reverseBitOrdering msg) # zero) : [2 * m * HexDigit]
+
+b2hAndh2bInvert: {n} (fin n, n > 0) => [n] -> Bool
+property b2hAndh2bInvert msg = h2b (b2h msg) == msg

@@ -1,0 +1,6 @@
+interface module Primitive::Symmetric::Cipher::Block::CipherInterface where
+  type KeySize : #
+  type BlockSize : #
+  type constraint (fin BlockSize, fin KeySize)
+  encrypt : [KeySize] -> [BlockSize] -> [BlockSize]
+  decrypt : [KeySize] -> [BlockSize] -> [BlockSize]

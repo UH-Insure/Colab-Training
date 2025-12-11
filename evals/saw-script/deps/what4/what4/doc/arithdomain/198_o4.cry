@@ -1,0 +1,14 @@
+type Dom n = {lo : [n], sz : [n]}
+mem : {n} (fin n) => Dom n -> [n] -> Bit
+mem a x = x - a.lo <= a.sz
+ubounds : {n} (fin n) => Dom n -> ([n], [n])
+ubounds a =
+  if carry a.lo a.sz then (0, ~0) else (a.lo, a.lo + a.sz)
+ule : {n} (fin n) => Dom n -> Dom n -> Bit
+ule a b = (ubounds a).1 <= (ubounds b).0
+correct_ule : {n}
+  (fin n, n >= 1) =>
+    Dom n -> Dom n -> [n] -> [n] -> Bit
+correct_ule a b x y = ule a b ==> mem a x ==> mem b y ==> x <= y
+/* pragma o4 : property */
+o4 = correct_ule`{16}

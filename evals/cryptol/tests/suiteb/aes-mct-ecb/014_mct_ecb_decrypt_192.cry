@@ -1,0 +1,27 @@
+import SuiteB
+
+
+type AESTestVector n =
+  {key : [n], plaintext : [128], ciphertext : [128]}
+mct_ecb_decrypt_192 : [192] -> [128] -> [100](AESTestVector 192)
+mct_ecb_decrypt_192 initialKey initialCt =
+  vs
+  where
+    vs =
+      generate (\i ->
+       {key = keys @ i,
+       ciphertext = cts @ (i * 1000),
+       plaintext = pts @ (i * 1000 + 999)})
+    cts : [100 * 1000][128]
+    cts = [initialCt] # take pts
+    pts : [100 * 1000][128]
+    pts =
+      generate (\i ->
+       aesDecryptBlock (schedules @ (i / 1000)) (cts @ i))
+    keys : [100][192]
+    keys =
+      [initialKey] # [k ^ ((drop`{64}
+        (xs ! 1)) # xs ! 0) | xs <- take`{99} (groupBy`{1000} pts)
+                            | k <- keys]
+    schedules : [100](AESDecryptKeySchedule AES192)
+    schedules = map aes192DecryptSchedule keys

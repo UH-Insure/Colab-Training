@@ -1,0 +1,14 @@
+type Nb = 4
+type State = [4][Nb * 8]
+type RoundKey = State
+addRoundKey : RoundKey -> State -> State
+addRoundKey k s = k ^ s
+doRounds : {a, b}
+  (fin b) =>
+    (Bit -> State -> a -> State) ->
+    (RoundKey, [b]a, a) -> State -> State
+doRounds rnd (ikey, rkeys, fkey) sIn =
+  rnd True (rs ! 0) fkey
+  where
+    s0 = addRoundKey ikey sIn
+    rs = [s0] # [rnd False s k | s <- rs | k <- rkeys]

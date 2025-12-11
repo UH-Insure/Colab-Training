@@ -1,0 +1,4168 @@
+j05hr3d/SFT-Qwen2.5-Coder-7B_v1.1s Eval Suite Results
+Started at 2025-12-08_07:51:52 Ended at 2025-12-08_08:14:25
+Processed 33 tasks.
+
+=== FINAL SCORE: N/A (no executed tasks) ===
+
+
+=== Task 1 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Implement a function named `xor8` which takes two 8-bit words and returns their bitwise XOR. Also provide a constant `zero8` equal to 0 (8-bit).
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+xor8 : [8] -> [8] -> [8]
+xor8 x y = x ^ y
+
+zero8 : [8]
+zero8 = 0
+```
+[GENERATED END]
+
+
+=== Task 2 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Implement a function named `matrix` which takes no input and returns a 3 x 3 matrix of tuples. For the function use a nested comprehension to write an expression to produce a 3 × 3 matrix (as a sequence of sequences), such that the ijth entry contains the value (i, j).
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+matrix = [[(i, j) | j <- [0 .. 2]] | i <- [0 .. 2]]
+```
+[GENERATED END]
+
+
+=== Task 3 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Implement a Caesar cipher. Define the functions `encrypt` and `decrypt` with the signature: `{n} [8] -> [n][8] -> [n][8]`.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+encrypt : {n} [8] -> [n][8] -> [n][8]
+encrypt k msg = [c + k | c <- msg]
+
+decrypt : {n} [8] -> [n][8] -> [n][8]
+decrypt k msg = [c - k | c <- msg]
+```
+[GENERATED END]
+
+
+=== Task 4 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol property that tests the function described below.
+
+### Request:
+Task: Using ONLY the functions and constraints provided, create a monomorphic Cryptol property named `equivalent` that proves decrypt inverts encrypt for a 512-byte plaintext.
+
+### Additional setup code:
+```cryptol
+encryptChar : [8] -> [8] -> [8]
+encryptChar key c = (c + key)
+decryptChar : [8] -> [8] -> [8]
+decryptChar key c = (c - key)
+encrypt : {n} [8] -> [n][8] -> [n][8]
+encrypt key txt = [ encryptChar key c | c <- txt ]
+decrypt : {n} [8] -> [n][8] -> [n][8]
+decrypt key txt = [ decryptChar key c | c <- txt ]
+```
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+encryptChar : [8] -> [8] -> [8]
+encryptChar key c = (c + key)
+decryptChar : [8] -> [8] -> [8]
+decryptChar key c = (c - key)
+encrypt : {n} [8] -> [n][8] -> [n][8]
+encrypt key txt = [ encryptChar key c | c <- txt ]
+decrypt : {n} [8] -> [n][8] -> [n][8]
+decrypt key txt = [ decryptChar key c | c <- txt ]
+
+import Primitive::Symmetric::Cipher::Block::LED
+
+property equivalent key pt = decrypt key ct == pt
+  where
+    ct = encrypt key pt
+```
+[GENERATED END]
+
+
+=== Task 5 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module `Primitive::Keyless::Hash::SHA2::Instantiations::SHA384` that imports the generic SHA-2 specification for SHA-384. Use `type DigestSize = 384`, `type w = 64`, and initialize the hash vector as `H0 = [
+        0xcbbb9d5dc1059ed8, 0x629a292a367cd507,
+        0x9159015a3070dd17, 0x152fecd8f70e5939,
+        0x67332667ffc00b31, 0x8eb44a8768581511,
+        0xdb0c2e0d64f98fa7, 0x47b5481dbefa4fa4
+    ]
+`
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Keyless::Hash::SHA2::Instantiations::SHA384 =
+    Primitive::Keyless::Hash::SHA2::Specification where
+
+type DigestSize = 384
+type w = 64
+
+H0 = [
+    0xcbbb9d5dc1059ed8, 0x629a292a367cd507,
+    0x9159015a3070dd17, 0x152fecd8f70e5939,
+    0x67332667ffc00b31, 0x8eb44a8768581511,
+    0xdb0c2e0d64f98fa7, 0x47b5481dbefa4fa4
+]
+```
+[GENERATED END]
+
+
+=== Task 6 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module `Primitive::Symmetric::Cipher::Block::AES::ExpandKey` that imports the generic `GF28`, `State`, and `SubByteSBox` of the AES encryption modules. Define `type Nk` and `type Nr` as parameters with the constraints that `Nk >= 1` with `8 >= width` and `Nr >= 2` with `8 >= width`. Define the functions `expandKey : [32 * Nk] -> (RoundKey, [Nr-1]RoundKey, RoundKey)`, `expandKeyForever : [Nk][4][8] -> [inf]RoundKey`, `keyWS : [Nk][4][8] -> [inf][4][8]`, `Rcon : [8] -> [4]GF28`, `SubWord : [4]GF28 -> [4]GF28`, `RotWord : [4]GF28 -> [4]GF28`, and `NextWord : [8] ->[4][8] -> [4][8] -> [4][8]`. The module should perform AES key expansion. The type `RoundKey` is defined in the `State` module as the following.
+
+### Additional setup code:
+```cryptol
+type State       = [4][Nb]GF28
+type Nb          = 4
+type RoundKey    = State
+```
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type State       = [4][Nb]GF28
+type Nb          = 4
+type RoundKey    = State
+
+module Primitive::Symmetric::Cipher::Block::AES::ExpandKey where
+
+import Primitive::Symmetric::Cipher::Block::AES::GF28
+import Primitive::Symmetric::Cipher::Block::AES::State
+import Primitive::Symmetric::Cipher::Block::AES::SubByteSBox
+
+type Nk = 4
+type Nr = 6
+
+expandKey : [32 * Nk] -> (RoundKey, [Nr-1]RoundKey, RoundKey)
+expandKey key = (keys @ 0, keys @@ [1 .. (Nr - 2)], keys @ (Nr - 1))
+  where
+    key' = split key
+    key'' = groupBy`{4} key'
+    key''' = keyWS key''
+    key'''' = take`{Nr} key'''
+    keys = key'''' # [NextWord i (key''''@(i - 1)) (key''''@(i - Nk)) | i <- [Nk .. (Nr - 1)]]
+
+expandKeyForever : [Nk][4][8] -> [inf]RoundKey
+expandKeyForever key = drop`{Nk} (keyWS key)
+
+keyWS : [Nk][4][8] -> [inf][4][8]
+keyWS key = key''
+  where
+    key' = map (map (fromInteger . toInteger)) key
+    key'' = [key'] # [NextWord i (key''@(i - 1)) (key''@(i - Nk)) | i <- [Nk .. (inf)]]
+
+Rcon : [8] -> [4]GF28
+Rcon i = [(gf28Pow x (i - 1)), 0, 0, 0]
+
+SubWord : [4]GF28 -> [4]GF28
+SubWord word = [SubByte b | b <- word]
+
+RotWord : [4]GF28 -> [4]GF28
+RotWord word = [word@1, word@2, word@3, word@0]
+
+NextWord : [8] -> [4][8] -> [4][8] -> [4][8]
+NextWord i prev prevPrev =
+  if i % Nk == 0 then SubWord (RotWord prev) ^ Rcon (i / Nk)
+  else if Nk > 6 && i % Nk == 4 then SubWord prev
+  else prev ^ prevPrev
+```
+[GENERATED END]
+
+
+=== Task 7 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines an incremental averaging state machine. The specification should define the type `State` to contain a sum of all values and the amount of values as two 32-bit words, the functions `init` to initialize `State`, `appendf` that adds a value to `sum'` and increments `len`, `digest` that returns the average in the `State`, and `avg` with signature `avg : {n} (fin n, 32 >= width n) => [n][32] -> [32]` to compute the averages of a sequence.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type State = { sum' : [32], len : [32] }
+
+init : State
+init = { sum' = 0, len = 0 }
+
+appendf : State -> [32] -> State
+appendf s x = { sum' = s.sum' + x, len = s.len + 1 }
+
+digest : State -> [32]
+digest s =
+  if s.len == 0 then 0 else (s.sum' / s.len)
+
+avg : {n} (fin n, 32 >= width n) => [n][32] -> [32]
+avg xs = digest (foldl appendf init xs)
+```
+[GENERATED END]
+
+
+=== Task 8 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module `Test` that imports `Cipher`. Define the function `evktest : {ks, bs, n} (fin bs) => (Cipher ks bs, [n]([ks],[bs]), [bs]) -> [n]([bs], Bit)`, that takes a cipher, `n` key and test vector tuples, and plain text. The function test that using the cipher’s `encrypt` to encrypt the plain text with each key from the test vectors will produce the cipher text in the test vectors. The function returns `n` tuples containing the cipher text produced by encrypting the plain text with each test key and a boolean value whether the cipher text matches the expected test vector.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Test where
+
+import Cipher
+
+evktest : {ks, bs, n} (fin bs) => (Cipher ks bs, [n]([ks],[bs]), [bs]) -> [n]([bs], Bit)
+evktest (cipher, tests, pt) =
+    [ (ct', ct == ct') | (key, ct') <- tests ]
+  where
+    ct = encrypt cipher pt key
+```
+[GENERATED END]
+
+
+=== Task 9 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol module `ECDSA_test` with imports `Common::utils` and `Primitive::Asymmetric::Signature::ECDSA::p192 as p192`. Define a property for the function `G_compress R = ec_compress (ec_affinify G) == R` from the p192 module. Use the value `0x00000003188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012` in your property.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module ECDSA_test where
+
+import Common::utils
+import Primitive::Asymmetric::Signature::ECDSA::p192 as p192
+
+property test_G_compress R = p192::G_compress R == ec_compress (ec_affinify p192::G)
+  where
+    R = 0x00000003188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012
+```
+[GENERATED END]
+
+
+=== Task 10 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol module `bivium` that generates the infinite keystream as specified by the Bivium stream cipher. Define the function `bivium_stream : [93] -> [84] -> [inf]` which takes two initial shift registers of lengths 93 and 84 bits and returns the infinite keystream according to the Bivium algorithm. Define `type N = 200`, and a function `Bivium : ([93], [84]) -> [N]Bit` which takes the two initial registers as a pair and returns the first N bits of the keystream returned from `bivium_stream`. Define the helper functions: `shift : {d} (fin d, d >=1) => [d] -> Bit -> [d]` that returns `fills` where `fills = [bit]#(drop`{1} (fill >> 1))`. The function `shift_regs : {d,e} (fin d, fin e, d >=1, e >=1) => [d] -> [e] -> ([inf],[inf][d],[inf][e])` that, given 2 initial registers, returns a tuple containing the infinite keystream, the infinite stream of `r1`, and the infinite stream of `r2`.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module bivium where
+
+bivium_stream : [93] -> [84] -> [inf]
+bivium_stream r1 r2 =
+    if (r1@0 ^ r1@57 ^ r1@86) == 0 then (bivium_stream (shift r1 True) (shift r2 True)) # [False]
+    else (bivium_stream (shift r1 True) (shift r2 True)) # [True]
+
+type N = 200
+Bivium : ([93], [84]) -> [N]Bit
+Bivium (r1,r2) = take`{N} (bivium_stream r1 r2)
+
+shift : {d} (fin d, d >=1) => [d] -> Bit -> [d]
+shift fill bit = fills where fills = [bit]#(drop`{1} (fill >> 1))
+
+shift_regs : {d,e} (fin d, fin e, d >=1, e >=1) => [d] -> [e] -> ([inf],[inf][d],[inf][e])
+shift_regs r1 r2 = (keystream, r1', r2') where
+    keystream = bivium_stream r1 r2
+    r1' = [shift r1 bit | bit <- keystream]
+    r2' = [shift r2 bit | bit <- keystream]
+```
+[GENERATED END]
+
+
+=== Task 11 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module `Primitive::Asymmetric::Signature::ECDSA::Instantiations::ECDSA_P521_SHA3_512` that imports the generic `ECDSA::UnconstrainedSpec`. Instantiate it with the  `EC = Common::EC::PrimeField::Instantiations::P521` and `Hash = Primitive::Keyless::Hash::SHA3::Instantiations::SHA3_512`.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Asymmetric::Signature::ECDSA::Instantiations::ECDSA_P521_SHA3_512 =
+    Primitive::Asymmetric::Signature::ECDSA::UnconstrainedSpec {
+        EC = Common::EC::PrimeField::Instantiations::P521,
+        Hash = Primitive::Keyless::Hash::SHA3::Instantiations::SHA3_512
+    }
+```
+[GENERATED END]
+
+
+=== Task 12 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module `Primitive::Symmetric::Cipher::Block::Simon::Instantiations::Simon96_96` that imports the generic Simon specification for Simon96_96. Use `type n = 48`, `type m = 2`, `type T = 52`, and `type j = 2`.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Simon::Instantiations::Simon96_96 =
+    Primitive::Symmetric::Cipher::Block::Simon::Specification where
+
+type n = 48
+type m = 2
+type T = 52
+type j = 2
+```
+[GENERATED END]
+
+
+=== Task 13 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification for a parameterized SHA-2 style hash function over word size w, defining sha : {L} (2 * w >= width L) => [L] -> [digest_size] and all supporting types, constants (H0, K), and functions (padding, parsing, message schedule, compression, and block processing).
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Keyless::Hash::SHA where
+
+parameter
+  type w : #
+  type constraint (fin w, w >= 1)
+
+type digest_size = 8 * w
+
+type block_size = 16 * w
+
+type num_blocks L = (L + 1 + 2 * w) /^ block_size
+
+type padded_msg L = [num_blocks L * block_size]
+
+type msg_len L = [2 * w]
+
+type msg_type L = [L]
+
+type H0 = [8][w]
+
+type K = [64][w]
+
+sha : {L} (2 * w >= width L) => [L] -> [digest_size]
+sha M = join (take (Hs ! 0))
+  where
+    M' = padding (M : msg_type L)
+    Hs = [H0] # [compression (H, block) | block <- parse M']
+
+parse : {L} (2 * w >= width L) => [L] -> [num_blocks L][block_size]
+parse M = split (M # (msg_len M'))
+
+padding : {L} (2 * w >= width L) => [L] -> [L + 1 + 2 * w]
+padding M = M # [True] # zero # (`L : msg_len L)
+
+message_schedule : [block_size] -> [64][w]
+message_schedule W = take (W # S')
+  where
+    S = [split W]
+    S' = [join (S @ i) | i <- [1 .. 63]]
+
+compression : ([w], [block_size]) -> [w]
+compression (H, W) = H'
+  where
+    W' = message_schedule W
+    T1 = H @ 7 + sigma1 (H @ 6) + Ch (H @ 6) (H @ 5) (H @ 4) + K @ 0 + W' @ 0
+    T2 = sigma0 (H @ 4) + Maj (H @ 4) (H @ 3) (H @ 2)
+    H' = H @ 7 + T1 + H @ 4 + T2
+
+sigma0 : [w] -> [w]
+sigma0 x = rotl x 28 ^ rotl x 34 ^ rotl x 39
+
+sigma1 : [w] -> [w]
+sigma1 x = rotl x 14 ^ rotl x 18 ^ rotl x 41
+
+Ch : [w] -> [w] -> [w] -> [w]
+Ch x y z = (x && y) ^ (~x && z)
+
+Maj : [w] -> [w] -> [w] -> [w]
+Maj x y z = (x && y) ^ (x && z) ^ (y && z)
+
+rotl : {n} (fin n) => [width n] -> [width n]
+rotl x = x <<< 1
+```
+[GENERATED END]
+
+
+=== Task 14 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Using the existing type `Cipher` and value `toyCipher` provided in the test setup, define a single polymorphic Cryptol function named `evktest` with the following type:
+
+evktest : {ks, bs, n} (fin bs)
+       => (Cipher ks bs, [n]([ks],[bs]), [bs]) -> [n]([bs], Bit)
+
+The function should take a cipher implementation, a sequence of (Key, Ciphertext) test vectors, and a single plaintext block. For each (Key, CT) in the list, it must iterate over that list using a single generator in a list comprehension (no parallel generators or multiple `|` arms), compute CT' = cipher.encrypt Key PT for that entry, and produce an output list of pairs (CT', CT' == CT).
+
+The code for `Cipher` and `toyCipher` is ALREADY present in the file from the test setup code. In your answer, you MUST NOT repeat, modify, or redefine `Cipher` or `toyCipher`, and you MUST NOT add any other top-level declarations.
+
+Your entire answer must consist of exactly two top-level lines: (1) the type signature for `evktest` exactly as given above, and (2) the definition of `evktest`. Do not wrap these in a module declaration, and do not include any setup code.
+
+### Additional setup code:
+```cryptol
+type Cipher ks bs =
+  { encrypt : [ks] -> [bs] -> [bs]
+  , decrypt : [ks] -> [bs] -> [bs]
+  }
+
+toyCipher : Cipher 8 8
+toyCipher = {
+  encrypt = \k pt -> k ^ pt,
+  decrypt = \k ct -> k ^ ct
+}
+
+```
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Cipher ks bs =
+  { encrypt : [ks] -> [bs] -> [bs]
+  , decrypt : [ks] -> [bs] -> [bs]
+  }
+
+toyCipher : Cipher 8 8
+toyCipher = {
+  encrypt = \k pt -> k ^ pt,
+  decrypt = \k ct -> k ^ ct
+}
+
+
+evktest : {ks, bs, n} (fin bs)
+       => (Cipher ks bs, [n]([ks],[bs]), [bs]) -> [n]([bs], Bit)
+evktest (cipher, tests, pt) =
+  [ (ct', ct' == ct) | (k, ct) <- tests | ct' <- cts ]
+  where
+    cts = [ cipher.encrypt k pt | k <- keys ]
+    keys = [ k | (k, _) <- tests ]
+```
+[GENERATED END]
+
+
+=== Task 15 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol property that tests the function described below.
+
+### Request:
+Task: Using ONLY the SHA-512 specification provided in the test setup (which defines a function `sha512` and all supporting constants), define a Cryptol property named `testVector1` with no arguments that checks `sha512` against the following fixed known-answer test vector:
+
+- Message (as a hex literal): 0x616263
+- Expected digest (as a hex literal): 0xddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f
+
+The property must *exactly* assert that `sha512` of this message equals this digest.
+
+The full definition of `sha512` (and all helper functions and constants) is ALREADY present in the file from the test setup code. In your answer, you MUST NOT repeat, modify, or redefine `sha512` or any of its helpers, and you MUST NOT add any other top-level declarations.
+
+Your entire answer must be a single top-level declaration starting with:
+
+property testVector1 =
+
+and it must directly assert that `sha512 0x616263` equals the given digest, using those exact hex constants. Do not introduce any arguments, do not wrap it in a module, and do not include any setup code.
+
+### Additional setup code:
+```cryptol
+sha512 M = result
+  where
+    M' = (pad M)
+    blocks = (groupBy`{1024} M')
+    hash = [H0] # [ processBlock b h | b <- blocks | h <- hash ]
+    result = (join (hash!0))
+
+processBlock : [1024] -> [8][64] -> [8][64]
+processBlock block Hprev = Hs
+  where
+    Mi = split block : [16][64]
+    Ws = (messageSch Mi)
+    round = [Hprev] # [ (step r (Ws@t) t) | t <- [0..79] | r <- round ]
+    Hs = [ (x + H) | x <- (round!0) | H <- Hprev ]
+
+step : [8][64] -> [64] -> [8] -> [8][64]
+step [a, b, c, d, e, f, g, h] Wt t = [a', b', c', d', e', f', g', h']
+  where
+    T1 = h + (SIGMA1 e) + (Ch e f g) + (K@t) + Wt
+    T2 = (SIGMA0 a) + (Maj a b c)
+    h' = g
+    g' = f
+    f' = e
+    e' = d + T1
+    d' = c
+    c' = b
+    b' = a
+    a' = T1 + T2
+
+messageSch : [16][64] -> [80][64]
+messageSch Mi = W
+  where
+    W = Mi # [ (sigma1 (W@(t-2))) + (W@(t-7)) + (sigma0 (W@(t-15))) + (W@(t-16)) | t <- [16..79] ]
+
+pad : {l, k} (fin l,
+              l <= ((2^^128) - 1),
+              l >= 0,
+              fin k,
+              k - l >= 129,
+              k == 128 + l + 1 + 1024 - ((l+129)%1024),
+              k%1024 == 0) => [l] -> [k]
+pad M = M # (1:[1]) # (0:[k-128-l-1]) # (`l:[128])
+
+Ch : [64] -> [64] -> [64] -> [64]
+Ch x y z = (x && y) ^ ((~x) && z)
+
+Maj : [64] -> [64] -> [64] -> [64]
+Maj x y z = (x && y) ^ (x && z) ^ (y && z)
+
+SIGMA0 : [64] -> [64]
+SIGMA0 x = (x >>> 28) ^ (x >>> 34) ^ (x >>> 39)
+
+SIGMA1 : [64] -> [64]
+SIGMA1 x = (x >>> 14) ^ (x >>> 18) ^ (x >>> 41)
+
+sigma0 : [64] -> [64]
+sigma0 x = (x >>> 1) ^ (x >>> 8) ^ (x >> 7)
+
+sigma1 : [64] -> [64]
+sigma1 x = (x >>> 19) ^ (x >>> 61) ^ (x >> 6)
+
+H0 = [ 0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
+       0x510e527fade682d1, 0x9b05688c2b3e6c1f, 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179 ]
+
+K = [
+0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc,
+0x3956c25bf348b538, 0x59f111f1b605d019, 0x923f82a4af194f9b, 0xab1c5ed5da6d8118,
+0xd807aa98a3030242, 0x12835b0145706fbe, 0x243185be4ee4b28c, 0x550c7dc3d5ffb4e2,
+0x72be5d74f27b896f, 0x80deb1fe3b1696b1, 0x9bdc06a725c71235, 0xc19bf174cf692694,
+0xe49b69c19ef14ad2, 0xefbe4786384f25e3, 0x0fc19dc68b8cd5b5, 0x240ca1cc77ac9c65,
+0x2de92c6f592b0275, 0x4a7484aa6ea6e483, 0x5cb0a9dcbd41fbd4, 0x76f988da831153b5,
+0x983e5152ee66dfab, 0xa831c66d2db43210, 0xb00327c898fb213f, 0xbf597fc7beef0ee4,
+0xc6e00bf33da88fc2, 0xd5a79147930aa725, 0x06ca6351e003826f, 0x142929670a0e6e70,
+0x27b70a8546d22ffc, 0x2e1b21385c26c926, 0x4d2c6dfc5ac42aed, 0x53380d139d95b3df,
+0x650a73548baf63de, 0x766a0abb3c77b2a8, 0x81c2c92e47edaee6, 0x92722c851482353b,
+0xa2bfe8a14cf10364, 0xa81a664bbc423001, 0xc24b8b70d0f89791, 0xc76c51a30654be30,
+0xd192e819d6ef5218, 0xd69906245565a910, 0xf40e35855771202a, 0x106aa07032bbd1b8,
+0x19a4c116b8d2d0c8, 0x1e376c085141ab53, 0x2748774cdf8eeb99, 0x34b0bcb5e19b48a8,
+0x391c0cb3c5c95a63, 0x4ed8aa4ae3418acb, 0x5b9cca4f7763e373, 0x682e6ff3d6b2b8a3,
+0x748f82ee5defb2fc, 0x78a5636f43172f60, 0x84c87814a1f0ab72, 0x8cc702081a6439ec,
+0x90befffa23631e28, 0xa4506cebde82bde9, 0xbef9a3f7b2c67915, 0xc67178f2e372532b,
+0xca273eceea26619c, 0xd186b8c721c0c207, 0xeada7dd6cde0eb1e, 0xf57d4f7fee6ed178,
+0x06f067aa72176fba, 0x0a637dc5a2c898a6, 0x113f9804bef90dae, 0x1b710b35131c471b,
+0x28db77f523047d84, 0x32caab7b40c72493, 0x3c9ebe0a15c9bebc, 0x431d67c49c100d4c,
+0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817
+]
+
+```
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+sha512 M = result
+  where
+    M' = (pad M)
+    blocks = (groupBy`{1024} M')
+    hash = [H0] # [ processBlock b h | b <- blocks | h <- hash ]
+    result = (join (hash!0))
+
+processBlock : [1024] -> [8][64] -> [8][64]
+processBlock block Hprev = Hs
+  where
+    Mi = split block : [16][64]
+    Ws = (messageSch Mi)
+    round = [Hprev] # [ (step r (Ws@t) t) | t <- [0..79] | r <- round ]
+    Hs = [ (x + H) | x <- (round!0) | H <- Hprev ]
+
+step : [8][64] -> [64] -> [8] -> [8][64]
+step [a, b, c, d, e, f, g, h] Wt t = [a', b', c', d', e', f', g', h']
+  where
+    T1 = h + (SIGMA1 e) + (Ch e f g) + (K@t) + Wt
+    T2 = (SIGMA0 a) + (Maj a b c)
+    h' = g
+    g' = f
+    f' = e
+    e' = d + T1
+    d' = c
+    c' = b
+    b' = a
+    a' = T1 + T2
+
+messageSch : [16][64] -> [80][64]
+messageSch Mi = W
+  where
+    W = Mi # [ (sigma1 (W@(t-2))) + (W@(t-7)) + (sigma0 (W@(t-15))) + (W@(t-16)) | t <- [16..79] ]
+
+pad : {l, k} (fin l,
+              l <= ((2^^128) - 1),
+              l >= 0,
+              fin k,
+              k - l >= 129,
+              k == 128 + l + 1 + 1024 - ((l+129)%1024),
+              k%1024 == 0) => [l] -> [k]
+pad M = M # (1:[1]) # (0:[k-128-l-1]) # (`l:[128])
+
+Ch : [64] -> [64] -> [64] -> [64]
+Ch x y z = (x && y) ^ ((~x) && z)
+
+Maj : [64] -> [64] -> [64] -> [64]
+Maj x y z = (x && y) ^ (x && z) ^ (y && z)
+
+SIGMA0 : [64] -> [64]
+SIGMA0 x = (x >>> 28) ^ (x >>> 34) ^ (x >>> 39)
+
+SIGMA1 : [64] -> [64]
+SIGMA1 x = (x >>> 14) ^ (x >>> 18) ^ (x >>> 41)
+
+sigma0 : [64] -> [64]
+sigma0 x = (x >>> 1) ^ (x >>> 8) ^ (x >> 7)
+
+sigma1 : [64] -> [64]
+sigma1 x = (x >>> 19) ^ (x >>> 61) ^ (x >> 6)
+
+H0 = [ 0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
+       0x510e527fade682d1, 0x9b05688c2b3e6c1f, 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179 ]
+
+K = [
+0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc,
+0x3956c25bf348b538, 0x59f111f1b605d019, 0x923f82a4af194f9b, 0xab1c5ed5da6d8118,
+0xd807aa98a3030242, 0x12835b0145706fbe, 0x243185be4ee4b28c, 0x550c7dc3d5ffb4e2,
+0x72be5d74f27b896f, 0x80deb1fe3b1696b1, 0x9bdc06a725c71235, 0xc19bf174cf692694,
+0xe49b69c19ef14ad2, 0xefbe4786384f25e3, 0x0fc19dc68b8cd5b5, 0x240ca1cc77ac9c65,
+0x2de92c6f592b0275, 0x4a7484aa6ea6e483, 0x5cb0a9dcbd41fbd4, 0x76f988da831153b5,
+0x983e5152ee66dfab, 0xa831c66d2db43210, 0xb00327c898fb213f, 0xbf597fc7beef0ee4,
+0xc6e00bf33da88fc2, 0xd5a79147930aa725, 0x06ca6351e003826f, 0x142929670a0e6e70,
+0x27b70a8546d22ffc, 0x2e1b21385c26c926, 0x4d2c6dfc5ac42aed, 0x53380d139d95b3df,
+0x650a73548baf63de, 0x766a0abb3c77b2a8, 0x81c2c92e47edaee6, 0x92722c851482353b,
+0xa2bfe8a14cf10364, 0xa81a664bbc423001, 0xc24b8b70d0f89791, 0xc76c51a30654be30,
+0xd192e819d6ef5218, 0xd69906245565a910, 0xf40e35855771202a, 0x106aa07032bbd1b8,
+0x19a4c116b8d2d0c8, 0x1e376c085141ab53, 0x2748774cdf8eeb99, 0x34b0bcb5e19b48a8,
+0x391c0cb3c5c95a63, 0x4ed8aa4ae3418acb, 0x5b9cca4f7763e373, 0x682e6ff3d6b2b8a3,
+0x748f82ee5defb2fc, 0x78a5636f43172f60, 0x84c87814a1f0ab72, 0x8cc702081a6439ec,
+0x90befffa23631e28, 0xa4506cebde82bde9, 0xbef9a3f7b2c67915, 0xc67178f2e372532b,
+0xca273eceea26619c, 0xd186b8c721c0c207, 0xeada7dd6cde0eb1e, 0xf57d4f7fee6ed178,
+0x06f067aa72176fba, 0x0a637dc5a2c898a6, 0x113f9804bef90dae, 0x1b710b35131c471b,
+0x28db77f523047d84, 0x32caab7b40c72493, 0x3c9ebe0a15c9bebc, 0x431d67c49c100d4c,
+0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817
+]
+
+
+property testVector1 =
+  sha512 0x616263 == 0xddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f
+```
+[GENERATED END]
+
+
+=== Task 16 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol property that tests the function described below.
+
+### Request:
+Task: Using ONLY the definitions `mk_buggy_fib_no_init`, `generate`, the infix operator `$`, and the sequences `foo` and `bar` provided in the test setup, define a Cryptol property named `fooEqualsBar` with no arguments that asserts that `foo` and `bar` are exactly equal. Do not redefine any of these functions or values; only provide the definition of `property fooEqualsBar`.
+
+### Additional setup code:
+```cryptol
+mk_buggy_fib_no_init : {a} (fin a, a >= 1) => [a] ->
+  ([1], ([8], [8], [a])) -> ([8], ([8], [8], [a]))
+mk_buggy_fib_no_init magic (_, (fn, fn1, k)) = (fn', (fn1, fn2, k+1))
+  where
+  fn2 = fn + fn1
+  // Change output when state has magic value.
+  fn' = fn + if k == magic then 1 else 0
+
+generate : {n, ix, a} (fin ix, fin n, n >= 1, ix >= width (n - 1)) => ([ix] -> a) -> [n]a
+generate f = [ f i | i <- [0 .. n-1] ]
+
+infixl 1 $
+f $ x = f x
+
+foo : [10][4]
+foo = generate $ \(i:[8]) -> if i == 0 then 1 else foo@(i-1)
+
+bar : [10][4]
+bar = generate \(i:[8]) -> if i == 0 then 1 else foo@(i-1)
+
+```
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+mk_buggy_fib_no_init : {a} (fin a, a >= 1) => [a] ->
+  ([1], ([8], [8], [a])) -> ([8], ([8], [8], [a]))
+mk_buggy_fib_no_init magic (_, (fn, fn1, k)) = (fn', (fn1, fn2, k+1))
+  where
+  fn2 = fn + fn1
+  // Change output when state has magic value.
+  fn' = fn + if k == magic then 1 else 0
+
+generate : {n, ix, a} (fin ix, fin n, n >= 1, ix >= width (n - 1)) => ([ix] -> a) -> [n]a
+generate f = [ f i | i <- [0 .. n-1] ]
+
+infixl 1 $
+f $ x = f x
+
+foo : [10][4]
+foo = generate $ \(i:[8]) -> if i == 0 then 1 else foo@(i-1)
+
+bar : [10][4]
+bar = generate \(i:[8]) -> if i == 0 then 1 else foo@(i-1)
+
+
+property fooEqualsBar = foo == bar
+```
+[GENERATED END]
+
+
+=== Task 17 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the function `unflatten : {r,w} (fin r, 5 * w >= r, fin w) => [r] -> [w][5]` that pads its input with zeros and groups it into `w` blocks of 5 elements using `groupBy` in Cryptol. DO NOT include import statements, module declarations, or any other code.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+unflatten : {r,w} (fin r, 5 * w >= r, fin w) => [r] -> [w][5]
+unflatten xs = groupBy`{5} (xs # zero)
+```
+[GENERATED END]
+
+
+=== Task 18 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol file that defines the functions `mk_curve_ops`, `ec_v1`, and `ec_v2`. The definition must follow the exact structure shown in the prompt: `mk_curve_ops` must construct a record containing fields `field`, `v1`, and `v2`, where `v1` calls `ec_v1` on the input parameter and `v2` calls `ec_v2` on the record being constructed. The functions must use the polymorphic types exactly as shown and must access `p.field.v0` correctly in `ec_v2`. The file must contain no module declaration and must consist only of the three definitions.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+mk_curve_ops : {p, t} (p >= 1, p <= 6144, p % 4 == 3) => { v0 : t, field : { v0 : t } }
+mk_curve_ops = { v0 = 0, field = { v0 = 0 } }
+
+ec_v1 : {p, t} (p >= 1, p <= 6144, p % 4 == 3) => t -> t
+ec_v1 x = x + 1
+
+ec_v2 : {p, t} (p >= 1, p <= 6144, p % 4 == 3) => { v0 : t, field : { v0 : t } } -> t
+ec_v2 p = p.field.v0 + 1
+```
+[GENERATED END]
+
+
+=== Task 19 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module named `T038` that declares an interface submodule `I` providing `x : [8]`, a submodule `F` that imports interface submodule `I` and defines `y = x + 1`, a submodule `P` that imports submodule `F` while exposing submodule `Q`, a submodule `Q` that defines `x = 11`, and finally an interface submodule `J` that imports submodule `F` through `P`. The structure must match the Cryptol module system rules exactly.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module T038 where
+
+interface submodule I where
+  x : [8]
+
+submodule F where
+  import interface submodule I
+
+  y = x + 1
+
+submodule P where
+  import submodule F
+  export submodule Q
+
+submodule Q where
+  x = 11
+
+interface submodule J where
+  import submodule F via submodule P
+```
+[GENERATED END]
+
+
+=== Task 20 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Reproduce exactly the four foreign function declarations `foreignAndCryptol`, `foreignAndNoCryptol`, `noForeignAndCryptol`, and `noForeignAndNoCryptol`, each using the C calling convention. Implement `foreignAndCryptol` to return its argument unchanged, leave `foreignAndNoCryptol` unimplemented, implement `noForeignAndCryptol` to return `x + 3`, and leave `noForeignAndNoCryptol` unimplemented. The file must contain only these four declarations.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+foreignAndCryptol : [8] -> [8]
+foreignAndCryptol x = x
+
+foreignAndNoCryptol : [8] -> [8]
+
+noForeignAndCryptol : [8] -> [8]
+noForeignAndCryptol x = x + 3
+
+noForeignAndNoCryptol : [8] -> [8]
+```
+[GENERATED END]
+
+
+=== Task 21 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol property that tests the function described below.
+
+### Request:
+Task: Write a Cryptol module implementing parameterized AES encryption and decryption for key sizes 128, 192, and 256 bits. The module must import the AES algorithm, key expansion, and T-box modules exactly as specified, define `encrypt` and `decrypt` in terms of expanded keys, and include a property named `test` verifying that `decrypt k (encrypt k pt) == pt` for all valid keys and all 128-bit plaintexts.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::AES::Tests::Parameterized where
+
+import Primitive::Symmetric::Cipher::Block::AES::Algorithm
+import Primitive::Symmetric::Cipher::Block::AES::KeyExpansion
+import Primitive::Symmetric::Cipher::Block::AES::TBox
+
+parameter
+  type KeySize : #
+  type constraint (fin KeySize, KeySize % 32 == 0, KeySize / 32 >= 4, KeySize / 32 <= 8)
+
+type Nb = 4 + (KeySize / 32 - 4)
+type State = [4][Nb]Byte
+type Key = [KeySize]Bit
+
+expandKey : Key -> ExpandedKey
+expandKey key = KeyExpansion key
+
+encrypt : {n} (fin n) => Key -> [n]Bit -> [n]Bit
+encrypt k pt = join (join (aesEncrypt (expandKey k) (split (split pt))))
+
+decrypt : {n} (fin n) => Key -> [n]Bit -> [n]Bit
+decrypt k ct = join (join (aesDecrypt (expandKey k) (split (split ct))))
+
+property test k pt = decrypt k (encrypt k pt) == pt
+```
+[GENERATED END]
+
+
+=== Task 22 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol property that tests the function described below.
+
+### Request:
+Task: Write a complete Cryptol module implementing the Bivium stream cipher. The module must define `Bivium_stream`, `Bivium`, `Bivium_alt`, and all cycle-testing helpers. It must also define the four properties: `Bivium_correct`, `Bivium_search`, `Bivium_search_with_suffix`, and `Bivium_alt_equivalent`, using the exact IVs, suffix, and test keystream provided. The file must match the structure and behavior of the Bivium specification.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Stream::Bivium where
+
+Bivium_stream : {n} (fin n) => [23] -> [23] -> [23] -> [n]
+Bivium_stream x y z = take `{n} xs where
+    xs = [b0] # [ b1 | b0 <- xs
+                    | b1 <- drop `{1} xs
+                    | c0 <- drop `{1} ys
+                    | c1 <- drop `{2} ys
+                    | d0 <- drop `{2} zs
+                    | d1 <- drop `{3} zs ]
+    b0 = (c0 ^ c1 ^ d0 ^ d1)
+    b1 = (b0 ^ c0 ^ d0)
+    c0 = (x <<< 16) ^ (y <<< 17) ^ (z <<< 18)
+    c1 = (x <<< 17) ^ (y <<< 18) ^ (z <<< 19)
+    d0 = (x <<< 18) ^ (y <<< 19) ^ (z <<< 20)
+    d1 = (x <<< 19) ^ (y <<< 20) ^ (z <<< 21)
+
+Bivium : {n} (fin n) => [23] -> [23] -> [23] -> [n] -> [n]
+Bivium x y z k = keystream where
+    keystream = drop `{16} (Bivium_stream x y z)
+    plaintext = k ^ keystream
+
+Bivium_alt : {n} (fin n) => [23] -> [23] -> [23] -> [n] -> [n]
+Bivium_alt x y z k = keystream where
+    keystream = drop `{16} (Bivium_stream x' y' z')
+    x' = x <<< 16
+    y' = y <<< 17
+    z' = z <<< 18
+
+cycle_test : {n} (fin n) => [n] -> Bit
+cycle_test xs = xs ! 0 == xs @ 16
+
+cycle_test_1 : {n} (fin n) => [n] -> Bit
+cycle_test_1 xs = xs ! 0 == xs @ 17
+
+cycle_test_2 : {n} (fin n) => [n] -> Bit
+cycle_test_2 xs = xs ! 0 == xs @ 18
+
+cycle_test_3 : {n} (fin n) => [n] -> Bit
+cycle_test_3 xs = xs ! 0 == xs @ 19
+
+cycle_test_4 : {n} (fin n) => [n] -> Bit
+cycle_test_4 xs = xs ! 0 == xs @ 20
+
+cycle_test_5 : {n} (fin n) => [n] -> Bit
+cycle_test_5 xs = xs ! 0 == xs @ 21
+
+property Bivium_correct = cycle_test (Bivium x y z k)
+    where
+        x = 0b1100111001011111101100101
+        y = 0b1001100101111110110010110
+        z = 0b1110010111111011001011001
+        k = 0b0000000000000000000000000
+
+property Bivium_search = cycle_test (Bivium x y z k)
+    where
+        x = 0b1100111001011111101100101
+        y = 0b1001100101111110110010110
+        z = 0b1110010111111011001011001
+        k = 0b0000000000000000000000000
+
+property Bivium_search_with_suffix = cycle_test (Bivium x y z k)
+    where
+        x = 0b1100111001011111101100101
+        y = 0b1001100101111110110010110
+        z = 0b1110010111111011001011001
+        k = 0b0000000000000000000000000
+
+property Bivium_alt_equivalent = cycle_test_1 (Bivium_alt x y z k)
+    where
+        x = 0b1100111001011111101100101
+        y = 0b1001100101111110110010110
+        z = 0b1110010111111011001011001
+        k = 0b0000000000000000000000000
+```
+[GENERATED END]
+
+
+=== Task 24 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol property that tests the function described below.
+
+### Request:
+Task: Write a Cryptol module implementing the FNV-1a 64-bit hash function, including padding, the FNV offset basis, prime constant, the block-processing logic, and a property `testsPass` that verifies the hash of the empty string, "a", and "foobar" equals the known answer test vectors provided.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+fnv1a : {n} (fin n) => [n] -> [64]
+fnv1a input = foldl fnvBlock h0 paddedInput
+    where
+        h0 = 0xcbf29ce484222325
+        p  = 1099511628211
+        pad = 0x80 # zero
+        paddedInput = input # pad
+
+fnvBlock : [64] -> [8] -> [64]
+fnvBlock h b = (h ^ (b : [64])) * p
+
+property testsPass = (fnv1a [] == 0xcbf29ce484222325) &&
+                    (fnv1a "a" == 0xaf63db82c1d6571c) &&
+                    (fnv1a "foobar" == 0x4aeaa22d6e9a3260)
+```
+[GENERATED END]
+
+
+=== Task 26 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module `Primitive::Keyless::Hash::SHA2::Instantiations::SHA384` that instantiates the generic SHA-2 specification for SHA-384 with 64-bit words, 384-bit digest size, and the given 8-word initial hash vector `H0`.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Keyless::Hash::SHA2::Instantiations::SHA384 =
+    Primitive::Keyless::Hash::SHA2::Specification where
+
+type w = 64
+type DigestSize = 384
+H0 = [
+    0x6a09e667f3bcc908,
+    0xbb67ae8584caa73b,
+    0x3c6ef372fe94f82b,
+    0xa54ff53a5f1d36f1,
+    0x510e527fade682d1,
+    0x9b05688c2b3e6c1f,
+    0x1f83d9abfb41bd6b,
+    0x5be0cd19137e2179
+]
+```
+[GENERATED END]
+
+
+=== Task 27 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol module Primitive::Keyless::Hash::SHA3::Tests::SHAKE256 with an xof function imported from the SHAKE256 instantiation and properties k5–k8 that assert xof applied to [], 0b0, 0b11, and 0b110 equals the given 512-bit expected_result constants.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+module Primitive::Keyless::Hash::SHA3::Tests::SHAKE256 where
+
+import Primitive::Keyless::Hash::SHA3::Instantiations::SHAKE256 as SHAKE256
+
+property k5 = xof [] == expected_result
+property k6 = xof [0b0] == expected_result
+property k7 = xof [0b11] == expected_result
+property k8 = xof [0b110] == expected_result
+
+xof : {msg_len} (fin msg_len) => [msg_len] -> [512]
+xof msg = SHAKE256::xof `{256} msg
+
+expected_result =
+  join
+    [0x4f919e5a,
+    0x9d5c47d6,
+    0x715f699c,
+    0x2842d02b,
+    0x6650041c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x960071c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548272c,
+    0x9600712c,
+    0x9548
+```
+[GENERATED END]
+
+
+=== Task 28 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module that instantiates SHA3-224 and defines properties t1, t5, t72, and t512 that check the hash and hashBytes functions against the given known-answer test vectors.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Keyless::Hash::SHA3::Tests::SHA3_224 where
+
+import Primitive::Keyless::Hash::SHA3::Instantiations::SHA3_224 as SHA3_224
+
+property t1 = SHA3_224::hash [] == output where
+    output = join [
+        0xd14a028c2a3a2bc9,
+        0x4761c62683d6ce6e,
+        0xfb4c695a85ff5bf9
+    ]
+
+property t5 = SHA3_224::hashBytes [] == output where
+    output = join [
+        0xd14a028c2a3a2bc9,
+        0x4761c62683d6ce6e,
+        0xfb4c695a85ff5bf9
+    ]
+
+property t72 = SHA3_224::hash "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq" == output where
+    output = join [
+        0x248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1
+    ]
+
+property t512 = SHA3_224::hash (join (replicate 1000 "a")) == output where
+    output = join [
+        0x335763f67402a762
+    ]
+```
+[GENERATED END]
+
+
+=== Task 30 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that models the Kalotan logic puzzle with parents and child as Bits, defines the given constraints (heterosexual parents, kid lying, parents’ statements), and includes properties equivalent to people_types, checkit1, and checkit2 capturing the valid/invalid configurations.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Person = Bit
+type Parents = (Person, Person)
+type Kid = Person
+
+heterosexual_parents : Parents -> Bool
+heterosexual_parents (p1, p2) = p1 != p2
+
+kid_lies : Parents -> Kid -> Bool
+kid_lies (p1, p2) k = ~(p1 ^ k)
+
+parents_say : Parents -> Kid -> Bool
+parents_say (p1, p2) k = p1 == k
+
+property people_types (p1 : Person) (p2 : Person) (k : Kid) =
+  if (heterosexual_parents (p1, p2))
+  then (kid_lies (p1, p2) k) \/ (parents_say (p1, p2) k)
+  else False
+
+checkit1 : Parents -> Kid -> Bool
+checkit1 (p1, p2) k = (heterosexual_parents (p1, p2)) /\ ((kid_lies (p1, p2) k) \/ (parents_say (p1, p2) k))
+
+checkit2 : Parents -> Kid -> Bool
+checkit2 (p1, p2) k = (heterosexual_parents (p1, p2)) /\ ((kid_lies (p1, p2) k) \/ (parents_say (p1, p2) k))
+```
+[GENERATED END]
+
+
+=== Task 31 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification for a parameterized SHA-2 style hash function over word size w, defining sha : {L} (2 * w >= width L) => [L] -> [digest_size] and all supporting types, constants (H0, K), and functions (padding, parsing, message schedule, compression, and block processing).
+
+### Additional setup code:
+```cryptol
+Ch_Alternate : {w} (fin w, w >= 1) => [w] -> [w] -> [w] -> [w]
+Ch_Alternate x y z = (x /\ y) \/ (~x /\ z)
+```
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+Ch_Alternate : {w} (fin w, w >= 1) => [w] -> [w] -> [w] -> [w]
+Ch_Alternate x y z = (x /\ y) \/ (~x /\ z)
+
+module Primitive::Keyless::Hash::SHA where
+
+parameter
+  type w : #
+  type constraint (fin w, w >= 1)
+
+type digest_size = 8 * w
+
+type block_size = 16 * w
+
+type num_blocks L = (L + 1 + 2 * w) /^ block_size
+
+type padded_length L = L + 1 + 2 * w
+
+type num_words L = num_blocks L * (block_size /^ (8 * w))
+
+type Message L = [L]
+
+type PaddedMessage L = [padded_length L]
+
+type Block L = [block_size]
+
+type Blocks L = [num_blocks L] (Block L)
+
+type State = [8][w]
+
+H0 : State
+H0 =
+  [0x6a09e667,
+  0xbb67ae85,
+  0x3c6ef372,
+  0xa54ff53a,
+  0x510e527f,
+  0x9b05688c,
+  0x1f83d9ab,
+  0x5be0cd19]
+
+K : [64][w]
+K =
+  [0x428a2f98,
+  0x71374491,
+  0xb5c0fbcf,
+  0xe9b5dba5,
+  0x3956c25b,
+  0x59f111f1,
+  0x923f82a4,
+  0xab1c5ed5,
+  0xd807aa98,
+  0x12835b01,
+  0x243185be,
+  0x550c7dc3,
+  0x72be5d74,
+  0x80deb1fe,
+  0x9bdc06a7,
+  0xc19bf174,
+  0xe49b69c1,
+  0xefbe4786,
+  0x0fc19dc6,
+  0x240ca1cc,
+  0x2de92c6f,
+  0x4a7484aa,
+  0x5cb0a9dc,
+  0x76f988da,
+  0x983e5152,
+  0xa831c66d,
+  0xb00327c8,
+  0xbf597fc7,
+  0xc6e00bf3,
+  0xd5a79147,
+  0x06ca6351,
+  0x14292967,
+  0x27b70a85,
+  0x2e1b2138,
+  0x4d2c6dfc,
+  0x53380d13,
+  0x650a7354,
+  0x766a0abb,
+  0x81c2c92e,
+  0x92722c85,
+  0xa2bfe8a1,
+  0xa81a664b,
+  0xc24b8b70,
+  0xc76c51a3,
+  0xd192e819,
+  0xd6990624,
+  0xf40e3585,
+  0x106aa070,
+  0x19a4c116,
+  0x1e376c08,
+  0x2748774c,
+  0x34b0bcb5,
+  0x391c0cb3,
+  0x4ed8aa4a,
+  0x5b9cca4f,
+  0x682e6ff3,
+  0x748f82ee,
+  0x78a5636f,
+  0x84c87814,
+  0x8cc70208,
+  0x90befffa,
+  0xa4506ceb,
+  0xbef9a3f7,
+  0xc67178f2]
+
+sha : {L} (2 * w >= width L) => [L] -> [digest_size]
+sha M = join (foldl compress H0 (message_schedule (parse (pad M))))
+
+pad : {L} (2 * w >= width L) => [L] -> [padded_length L]
+pad M = M # [1] # zero # (`L : [2 * w])
+
+parse : {L} (2 * w >= width L) => [padded_length L] -> [num_words L][w]
+parse M = split M
+
+message_schedule : {L} (2 * w >= width L) => [num_words L][w] -> [num_blocks L] (Block L)
+message_schedule M = map parse' M'
+
+parse' : {L} (2 * w >= width L) => [16][w] -> [16][w]
+parse' M = M
+
+compress : State -> Block L -> State
+compress H M = foldl f (H # [zero]) (M # K')
+
+f : State -> ([w], [w]) -> State
+f (h0, h1, h2, h3, h4, h5, h6, h7) (m, k) =
+  (h1',
+  h2',
+  h3',
+  h4',
+  h5',
+  h6',
+  h7',
+  h0')
+  where
+    h0' = h7
+    h1' = h0
+    h2' = h1
+    h3' = h2
+    h4' = h3
+    h5' = h4
+    h6' = h5
+    h7' = h6 ^ (s0 a) ^ (Ch a b c) ^ k ^ m
+    a = h0
+    b = h1
+    c = h2
+    d = h3
+    e = h4
+    f = h5
+    g = h6
+    h = h7
+
+s0 : {w} (fin w, w >= 1) => [w] -> [w]
+s0 x = rotr x 28 ^ rotr x 34 ^ rotr x 39
+
+Ch : {w} (fin w, w >= 1) => [w] -> [w] -> [w] -> [w]
+Ch x y z = (x /\ y) \/ (~x /\ z)
+
+rotr : {n, k} (fin n, fin k) => [n] -> [k] -> [n]
+rotr x amt = drop`{n - k} (x <<< amt)
+```
+[GENERATED END]
+
+
+=== Task 32 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Create a function that performs modulo addition with the signature `mod_add_Z : (Integer, Integer, Integer) -> Integer`. The first parameter is the modulo base.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+mod_add_Z : (Integer, Integer, Integer) -> Integer
+mod_add_Z (m, x, y) = (x + y) % m
+```
+[GENERATED END]
+
+
+=== Task 33 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Create a function that multiplies a number with itself using modulo multiplication. Define the following functions `mod_mul_Z : (Integer, Integer, Integer) -> Integer` and `mod_sq_Z : (Integer, Integer) -> Integer`. The first parameter should be the modulo base for both functions. `mod_sq_Z` should call `mod_mul_Z` to perform the modulo multiplication.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+mod_mul_Z : (Integer, Integer, Integer) -> Integer
+mod_mul_Z (x, y, m) = (x * y) % m
+
+mod_sq_Z : (Integer, Integer) -> Integer
+mod_sq_Z (x, m) = mod_mul_Z (x, x, m)
+```
+[GENERATED END]
+
+
+=== Task 34 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the function `mod_div_Z : (Integer, Integer, Integer) -> Integer` that performs modulo division between two integers. The modulo base is the first parameter. You should implement Stein's algorithm and call `mod_half_Z` to perform modulo division by 2.
+
+### Additional setup code:
+```cryptol
+mod_half_Z : (Integer, Integer) -> Integer
+mod_half_Z (p, x) = if (x % 2 == 0) then x / 2 else (x + p) / 2
+
+```
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+mod_half_Z : (Integer, Integer) -> Integer
+mod_half_Z (p, x) = if (x % 2 == 0) then x / 2 else (x + p) / 2
+
+
+mod_div_Z : (Integer, Integer, Integer) -> Integer
+mod_div_Z (p, x, y) =
+  if y == 0 then 0
+  else if y == 1 then x
+  else if y == -1 then mod_neg_Z (p, x)
+  else if y > 0 then div_pos
+  else mod_neg_Z (p, div_pos)
+  where
+    div_pos = if y == 2 then mod_half_Z (p, x)
+              else if y % 2 == 0 then mod_div_Z (p, x, y / 2)
+              else mod_sub_Z (p, mod_div_Z (p, x, (y + 1) / 2), mod_half_Z (p, x))
+
+mod_neg_Z : (Integer, Integer) -> Integer
+mod_neg_Z (p, x) = if x == 0 then 0 else p - x
+
+mod_sub_Z : (Integer, Integer, Integer) -> Integer
+mod_sub_Z (p, x, y) = mod_add_Z (p, x, mod_neg_Z (p, y))
+```
+[GENERATED END]
+
+
+=== Task 35 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Create a Cryptol specification that performs the SHA-512 message schedule expansion. Define the functions `messageSch : [16][64] -> [80][64]`, `sigma0 : [64] -> [64]`, and `sigma1 : [64] -> [64]` to perform the message expansion.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+messageSch : [16][64] -> [80][64]
+messageSch M = W
+  where
+    W = M # [ sigma1 (W @ (i - 32)) + (W @ (i - 16)) + sigma0 (W @ (i - 7)) + (W @ (i - 2)) | i <- [16 .. 79] ]
+sigma0 : [64] -> [64]
+sigma0 x = (x >>> 28) ^ (x >>> 34) ^ (x >>> 39)
+sigma1 : [64] -> [64]
+sigma1 x = (x >>> 14) ^ (x >>> 18) ^ (x >>> 41)
+```
+[GENERATED END]
+
+
+=== Task 35 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the property `tcId1080` that checks, for AES-256 Key Wrap with padding in AE mode, that encrypting the plaintext `0x06` under the key `0x3ea9325069ed93a96c331bdd6dd766ec64bbba83a72c69ed75df55043fb0bfd1` with `KWP_AE` produces the expected ciphertext `0x40a9c42012ba38211b800e6e313b6876`, using the helper `check_KWP_AE key pt expected_ct = KWP_AE key pt == expected_ct`.
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_KeyWrap
+
+
+check_KWP_AE key pt expected_ct = KWP_AE key pt == expected_ct
+/* pragma tcId1080 : property */
+tcId1080 =
+  testPassed == check_KWP_AE key pt ct
+  where
+    testPassed = True
+    key =
+      0x3ea9325069ed93a96c331bdd6dd766ec64bbba83a72c69ed75df55043fb0bfd1
+    pt = 0x06
+    ct = 0x40a9c42012ba38211b800e6e313b6876
+```
+[GENERATED END]
+

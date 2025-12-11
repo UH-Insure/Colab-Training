@@ -1,0 +1,4 @@
+module Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES128_CFB =
+    Primitive::Symmetric::Cipher::Block::Modes::CFB {
+        Primitive::Symmetric::Cipher::Block::AES::Instantiations::AES128
+    }

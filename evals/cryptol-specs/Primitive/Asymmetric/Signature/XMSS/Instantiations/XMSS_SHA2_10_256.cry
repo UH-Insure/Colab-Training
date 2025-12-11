@@ -1,0 +1,6 @@
+module Primitive::Asymmetric::Signature::XMSS::Instantiations::XMSS_SHA2_10_256 =
+    Primitive::Asymmetric::Signature::XMSS::Specification {
+        Parameters = Primitive::Asymmetric::Signature::XMSS::ParameterSets::XMSS_SHA2_10_256_Parameters,
+        WOTS = Primitive::Asymmetric::Signature::WOTS::Instantiations::WOTSP_SHA2_256
+
+    }

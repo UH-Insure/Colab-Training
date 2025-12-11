@@ -1,0 +1,2253 @@
+Qwen/Qwen2.5-Coder-7B Eval Suite Results
+Started at 2025-12-10_18:07:36 Ended at 2025-12-10_18:07:41
+Processed 84 tasks.
+
+=== FINAL SCORE: 34 / 84 = 40.48% ===
+
+[GENERATE BEGIN]
+```cryptol
+xor8 : [8] -> [8] -> [8]
+xor8 x y = x ^ y
+
+zero8 : [8]
+zero8 = 0
+```
+[GENERATE END]
+
+[RESULT] Task 1: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+matrix = [[(i, j) | j <- [1,2,3]] | i <- [1,2,3]]
+```
+[GENERATE END]
+
+[RESULT] Task 2: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+encrypt : {n} [8] -> [n][8] -> [n][8]
+encrypt k msg = [m + k | m <- msg]
+decrypt : {n} [8] -> [n][8] -> [n][8]
+decrypt k ct = [c - k | c <- ct]
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 3: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+encryptChar : [8] -> [8] -> [8]
+encryptChar key c = (c + key)
+decryptChar : [8] -> [8] -> [8]
+decryptChar key c = (c - key)
+encrypt : {n} [8] -> [n][8] -> [n][8]
+encrypt key txt = [ encryptChar key c | c <- txt ]
+decrypt : {n} [8] -> [n][8] -> [n][8]
+decrypt key txt = [ decryptChar key c | c <- txt ]
+
+encryptChar : [8] -> [8] -> [8]
+encryptChar key c = (c + key)
+decryptChar : [8] -> [8] -> [8]
+decryptChar key c = (c - key)
+encrypt : {n} [8] -> [n][8] -> [n][8]
+encrypt key txt = [ encryptChar key c | c <- txt ]
+decrypt : {n} [8] -> [n][8] -> [n][8]
+decrypt key txt = [ decryptChar key c | c <- txt ]
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 4: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Keyless::Hash::SHA2::Instantiations::SHA384 =
+    Primitive::Keyless::Hash::SHA2::Specification where
+
+        type DigestSize = 384
+        type w = 64
+
+        H0 = [
+            0xcbbb9d5dc1059ed8, 0x629a292a367cd507,
+            0x9159015a3070dd17, 0x152fecd8f70e5939,
+            0x67332667ffc00b31, 0x8eb44a8768581511,
+            0xdb0c2e0d64f98fa7, 0x47b5481dbefa4fa4
+        ]
+```
+[GENERATE END]
+
+[RESULT] Task 5: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::AES::ExpandKey where
+
+import Primitive::Symmetric::Cipher::Block::AES::GF28
+import Primitive::Symmetric::Cipher::Block::AES::State
+import Primitive::Symmetric::Cipher::Block::AES::SubByteSBox
+
+parameter
+
+  type Nk : #
+  type constraint (8 >= width Nk, Nk >= 1)
+
+  type Nr : #
+  type constraint (8 >= width Nr, Nr >= 2)
+
+expandKey : [32 * Nk] -> (RoundKey, [Nr-1]RoundKey, RoundKey)
+expandKey key = ( keys @ 0
+                , keys @@ ([1 .. (Nr - 1)] : [_][8])
+                , keys @ (`Nr : [8])
+                )
+  where   seed : [Nk][4][8]
+          seed = split (split key)
+          keys = expandKeyForever seed
+
+expandKeyForever : [Nk][4][8] -> [inf]RoundKey
+expandKeyForever seed = [ transpose g | g <- split (keyWS seed) ]
+
+keyWS : [Nk][4][8] -> [inf][4][8]
+keyWS seed    = xs
+     where xs = seed # [ NextWord i prev old
+                       | i    <- [ `Nk ... ]
+                       | prev <- drop`{Nk-1} xs
+                       | old  <- xs
+                       ]
+
+Rcon : [8] -> [4]GF28
+Rcon i = [ gf28Pow <| x |> (i-1), 0, 0, 0]
+
+SubWord : [4]GF28 -> [4]GF28
+SubWord bs = [ SubByte b | b <- bs ]
+
+RotWord : [4]GF28 -> [4]GF28
+RotWord [a0, a1, a2, a3] = [a1, a2, a3, a0]
+
+
+module Primitive::Symmetric::Cipher::Block::AES::ExpandKey where
+
+import Primitive::Symmetric::Cipher::Block::AES::GF28
+import Primitive::Symmetric::Cipher::Block::AES::State
+import Primitive::Symmetric::Cipher::Block::AES::SubByteSBox
+
+parameter
+
+  type Nk : #
+  type constraint (8 >= width Nk, Nk >= 1)
+
+  type Nr : #
+  type constraint (8 >= width Nr, Nr >= 2)
+
+expandKey : [32 * Nk] -> (RoundKey, [Nr-1]RoundKey, RoundKey)
+expandKey key = ( keys @ 0
+                , keys @@ ([1 .. (Nr - 1)] : [_][8])
+                , keys @ (`Nr : [8])
+                )
+  where   seed : [Nk][4][8]
+          seed = split (split key)
+          keys = expandKeyForever seed
+
+expandKeyForever : [Nk][4][8] -> [inf]RoundKey
+expandKeyForever seed = [ transpose g | g <- split (keyWS seed) ]
+
+keyWS : [Nk][4][8] -> [inf][4][8]
+keyWS seed    = xs
+     where xs = seed # [ NextWord i prev old
+                       | i    <- [ `Nk ... ]
+                       | prev <- drop`{Nk-1} xs
+                       | old  <- xs
+                       ]
+
+Rcon : [8] -> [4]GF28
+Rcon i = [ gf28Pow <| x |> (i-1), 0, 0, 0]
+
+SubWord : [4]GF28 -> [4]GF28
+SubWord bs = [ SubByte b | b <- bs ]
+
+RotWord : [4]GF28 -> [4]GF28
+RotWord [a0, a1, a2, a3] = [a1, a2, a3, a0]
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 6: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+type State = { sum' : [32], len : [32] }
+init : State
+init = { sum' = 0, len = 0 }
+appendf : {a} (Literal 1 a) => a -> State -> State
+appendf x s =
+  { sum' = s.sum' + x
+  , len = s.len + 1
+  }
+digest : State -> [32]
+digest s = s.sum' / s.len
+avg : {n} (fin n, 32 >= width n) => [n][32] -> [32]
+avg xs = (digest (foldl appendf init xs))
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 7: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Test where
+
+import Cipher
+
+evktest : {ks, bs, n} (fin bs) => (Cipher ks bs, [n]([ks],[bs]), [bs]) -> [n]([bs], Bit)
+evktest (cipher, tests, pt) = map (testEncrypt cipher) tests
+    where testEncrypt c (key, ct) = (c.encrypt pt key, ct == c.encrypt pt key)
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 8: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module ECDSA_test where
+
+import Common::utils
+import Primitive::Asymmetric::Signature::ECDSA::p192 as p192
+
+property test_G_compress R = p192::G_compress R == ec_compress (ec_affinify p192::G)
+/* pragma R : [192] */
+R = 0x00000003188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 9: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module bivium where
+
+bivium_stream : [93] -> [84] -> [inf]
+bivium_stream r1 r2 =
+    take`{1} (r1 @@ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92]) ^ (r2 @@ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92])
+
+type N = 200
+
+Bivium : ([93], [84]) -> [N]Bit
+Bivium (r1, r2) = take`{N} (bivium_stream r1 r2)
+
+shift : {d} (fin d, d >=1) => [d] -> Bit -> [d]
+shift fill bit = fills where fills = [bit]#(drop`{1} (fill >> 1))
+
+shift_regs : {d,e} (fin d, fin e, d >=1, e >=1) => [d] -> [e] -> ([inf],[inf][d],[inf][e])
+shift_regs r1 r2 =
+    (bivium_stream r1 r2, r1s, r2s)
+    where
+        r1s = [r1]#[shift r1 (r2@0) | r1 <- r1s]
+        r2s = [r2]#[shift r2 (r1@0) | r2 <- r2s]
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 10: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Asymmetric::Signature::ECDSA::Instantiations::ECDSA_P521_SHA3_512 =
+    Primitive::Asymmetric::Signature::ECDSA::UnconstrainedSpec {
+        EC = Common::EC::PrimeField::Instantiations::P521,
+        Hash = Primitive::Keyless::Hash::SHA3::Instantiations::SHA3_512
+    }
+```
+[GENERATE END]
+
+[RESULT] Task 11: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Simon::Instantiations::Simon96_96 =
+    Primitive::Symmetric::Cipher::Block::Simon::Specification where
+        type n = 48
+        type m = 2
+        type T = 52
+        type j = 2
+```
+[GENERATE END]
+
+[RESULT] Task 12: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+
+```
+[GENERATE END]
+
+[RESULT] Task 13: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+type Cipher ks bs =
+  { encrypt : [ks] -> [bs] -> [bs]
+  , decrypt : [ks] -> [bs] -> [bs]
+  }
+
+toyCipher : Cipher 8 8
+toyCipher = {
+  encrypt = \k pt -> k ^ pt,
+  decrypt = \k ct -> k ^ ct
+}
+
+
+type Cipher ks bs =
+  { encrypt : [ks] -> [bs] -> [bs]
+  , decrypt : [ks] -> [bs] -> [bs]
+  }
+
+toyCipher : Cipher 8 8
+toyCipher = {
+  encrypt = \k pt -> k ^ pt,
+  decrypt = \k ct -> k ^ ct
+}
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 14: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+sha512 M = result
+  where
+    M' = (pad M)
+    blocks = (groupBy`{1024} M')
+    hash = [H0] # [ processBlock b h | b <- blocks | h <- hash ]
+    result = (join (hash!0))
+
+processBlock : [1024] -> [8][64] -> [8][64]
+processBlock block Hprev = Hs
+  where
+    Mi = split block : [16][64]
+    Ws = (messageSch Mi)
+    round = [Hprev] # [ (step r (Ws@t) t) | t <- [0..79] | r <- round ]
+    Hs = [ (x + H) | x <- (round!0) | H <- Hprev ]
+
+step : [8][64] -> [64] -> [8] -> [8][64]
+step [a, b, c, d, e, f, g, h] Wt t = [a', b', c', d', e', f', g', h']
+  where
+    T1 = h + (SIGMA1 e) + (Ch e f g) + (K@t) + Wt
+    T2 = (SIGMA0 a) + (Maj a b c)
+    h' = g
+    g' = f
+    f' = e
+    e' = d + T1
+    d' = c
+    c' = b
+    b' = a
+    a' = T1 + T2
+
+messageSch : [16][64] -> [80][64]
+messageSch Mi = W
+  where
+    W = Mi # [ (sigma1 (W@(t-2))) + (W@(t-7)) + (sigma0 (W@(t-15))) + (W@(t-16)) | t <- [16..79] ]
+
+pad : {l, k} (fin l,
+              l <= ((2^^128) - 1),
+              l >= 0,
+              fin k,
+              k - l >= 129,
+              k == 128 + l + 1 + 1024 - ((l+129)%1024),
+              k%1024 == 0) => [l] -> [k]
+pad M = M # (1:[1]) # (0:[k-128-l-1]) # (`l:[128])
+
+Ch : [64] -> [64] -> [64] -> [64]
+Ch x y z = (x && y) ^ ((~x) && z)
+
+Maj : [64] -> [64] -> [64] -> [64]
+Maj x y z = (x && y) ^ (x && z) ^ (y && z)
+
+SIGMA0 : [64] -> [64]
+SIGMA0 x = (x >>> 28) ^ (x >>> 34) ^ (x >>> 39)
+
+SIGMA1 : [64] -> [64]
+SIGMA1 x = (x >>> 14) ^ (x >>> 18) ^ (x >>> 41)
+
+sigma0 : [64] -> [64]
+sigma0 x = (x >>> 1) ^ (x >>> 8) ^ (x >> 7)
+
+sigma1 : [64] -> [64]
+sigma1 x = (x >>> 19) ^ (x >>> 61) ^ (x >> 6)
+
+H0 = [ 0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
+       0x510e527fade682d1, 0x9b05688c2b3e6c1f, 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179 ]
+
+K = [
+0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc,
+0x3956c25bf348b538, 0x59f111f1b605d019, 0x923f82a4af194f9b, 0xab1c5ed5da6d8118,
+0xd807aa98a3030242, 0x12835b0145706fbe, 0x243185be4ee4b28c, 0x550c7dc3d5ffb4e2,
+0x72be5d74f27b896f, 0x80deb1fe3b1696b1, 0x9bdc06a725c71235, 0xc19bf174cf692694,
+0xe49b69c19ef14ad2, 0xefbe4786384f25e3, 0x0fc19dc68b8cd5b5, 0x240ca1cc77ac9c65,
+0x2de92c6f592b0275, 0x4a7484aa6ea6e483, 0x5cb0a9dcbd41fbd4, 0x76f988da831153b5,
+0x983e5152ee66dfab, 0xa831c66d2db43210, 0xb00327c898fb213f, 0xbf597fc7beef0ee4,
+0xc6e00bf33da88fc2, 0xd5a79147930aa725, 0x06ca6351e003826f, 0x142929670a0e6e70,
+0x27b70a8546d22ffc, 0x2e1b21385c26c926, 0x4d2c6dfc5ac42aed, 0x53380d139d95b3df,
+0x650a73548baf63de, 0x766a0abb3c77b2a8, 0x81c2c92e47edaee6, 0x92722c851482353b,
+0xa2bfe8a14cf10364, 0xa81a664bbc423001, 0xc24b8b70d0f89791, 0xc76c51a30654be30,
+0xd192e819d6ef5218, 0xd69906245565a910, 0xf40e35855771202a, 0x106aa07032bbd1b8,
+0x19a4c116b8d2d0c8, 0x1e376c085141ab53, 0x2748774cdf8eeb99, 0x34b0bcb5e19b48a8,
+0x391c0cb3c5c95a63, 0x4ed8aa4ae3418acb, 0x5b9cca4f7763e373, 0x682e6ff3d6b2b8a3,
+0x748f82ee5defb2fc, 0x78a5636f43172f60, 0x84c87814a1f0ab72, 0x8cc702081a6439ec,
+0x90befffa23631e28, 0xa4506cebde82bde9, 0xbef9a3f7b2c67915, 0xc67178f2e372532b,
+0xca273eceea26619c, 0xd186b8c721c0c207, 0xeada7dd6cde0eb1e, 0xf57d4f7fee6ed178,
+0x06f067aa72176fba, 0x0a637dc5a2c898a6, 0x113f9804bef90dae, 0x1b710b35131c471b,
+0x28db77f523047d84, 0x32caab7b40c72493, 0x3c9ebe0a15c9bebc, 0x431d67c49c100d4c,
+0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817
+]
+
+
+sha512 M = result
+  where
+    M' = (pad M)
+    blocks = (groupBy`{1024} M')
+    hash = [H0] # [ processBlock b h | b <- blocks | h <- hash ]
+    result = (join (hash!0))
+
+processBlock : [1024] -> [8][64] -> [8][64]
+processBlock block Hprev = Hs
+  where
+    Mi = split block : [16][64]
+    Ws = (messageSch Mi)
+    round = [Hprev] # [ (step r (Ws@t) t) | t <- [0..79] | r <- round ]
+    Hs = [ (x + H) | x <- (round!0) | H <- Hprev ]
+
+step : [8][64] -> [64] -> [8] -> [8][64]
+step [a, b, c, d, e, f, g, h] Wt t = [a', b', c', d', e', f', g', h']
+  where
+    T1 = h + (SIGMA1 e) + (Ch e f g) + (K@t) + Wt
+    T2 = (SIGMA0 a) + (Maj a b c)
+    h' = g
+    g' = f
+    f' = e
+    e' = d + T1
+    d' = c
+    c' = b
+    b' = a
+    a' = T1 + T2
+
+messageSch : [16][64] -> [80][64]
+messageSch Mi = W
+  where
+    W = Mi # [ (sigma1 (W@(t-2))) + (W@(t-7)) + (sigma0 (W@(t-15))) + (W@(t-16)) | t <- [16..79] ]
+
+pad : {l, k} (fin l,
+              l <= ((2^^128) - 1),
+              l >= 0,
+              fin k,
+              k - l >= 129,
+              k == 128 + l + 1 + 1024 - ((l+129)%1024),
+              k%1024 == 0) => [l] -> [k]
+pad M = M # (1:[1]) # (0:[k-128-l-1]) # (`l:[128])
+
+Ch : [64] -> [64] -> [64] -> [64]
+Ch x y z = (x && y) ^ ((~x) && z)
+
+Maj : [64] -> [64] -> [64] -> [64]
+Maj x y z = (x && y) ^ (x && z) ^ (y && z)
+
+SIGMA0 : [64] -> [64]
+SIGMA0 x = (x >>> 28) ^ (x >>> 34) ^ (x >>> 39)
+
+SIGMA1 : [64] -> [64]
+SIGMA1 x = (x >>> 14) ^ (x >>> 18) ^ (x >>> 41)
+
+sigma0 : [64] -> [64]
+sigma0 x = (x >>> 1) ^ (x >>> 8) ^ (x >> 7)
+
+sigma1 : [64] -> [64]
+sigma1 x = (x >>> 19) ^ (x >>> 61) ^ (x >> 6)
+
+H0 = [ 0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
+       0x510e527fade682d1, 0x9b05688c2b3e6c1f, 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179 ]
+
+K = [
+0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc,
+0x3956c25bf348b538, 0x59f111f1b605d019, 0x923f82a4af194f9b, 0xab1c5ed5da6d8118,
+0xd807aa98a3030242, 0x12835b0145706fbe, 0x243185be4ee4b28c, 0x550c7dc3d5ffb4e2,
+0x72be5d74f27b896f, 0x80deb1fe3b1696b1, 0x9bdc06a725c71235, 0xc19bf174cf692694,
+0xe49b69c19ef14ad2, 0xefbe4786384f25e3, 0x0fc19dc68b8cd5b5, 0x240ca1cc77ac9c65,
+0x2de92c6f592b0275, 0x4a7484aa6ea6e483, 0x5cb0a9dcbd41fbd4, 0x76f988da831153b5,
+0x983e5152ee66dfab, 0xa831c66d2db43210, 0xb00327c898fb213f, 0xbf597fc7beef0ee4,
+0xc6e00bf33da88fc2, 0xd5a79147930aa725, 0x06ca6351e003826f, 0x142929670a0e6e70,
+0x27b70a8546d22ffc, 0x2e1b21385c26c926, 0x4d2c6dfc5ac42aed, 0x53380d139d95b3df,
+0x650a73548baf63de, 0x766a0abb3c77b2a8, 0x81c2c92e47edaee6, 0x92722c851482353b,
+0xa2bfe8a14cf10364, 0xa81a664bbc423001, 0xc24b8b70d0f89791, 0xc76c51a30654be30,
+0xd192e819d6ef5218, 0xd69906245565a910, 0xf40e35855771202a, 0x106aa07032bbd1b8,
+0x19a4c116b8d2d0c8, 0x1e376c085141ab53, 0x2748774cdf8eeb99, 0x34b0bcb5e19b48a8,
+0x391c0cb3c5c95a63, 0x4ed8aa4ae3418acb, 0x5b9cca4f7763e373, 0x682e6ff3d6b2b8a3,
+0x748f82ee5defb2fc, 0x78a5636f43172f60, 0x84c87814a1f0ab72, 0x8cc702081a6439ec,
+0x90befffa23631e28, 0xa4506cebde82bde9, 0xbef9a3f7b2c67915, 0xc67178f2e372532b,
+0xca273eceea26619c, 0xd186b8c721c0c207, 0xeada7dd6cde0eb1e, 0xf57d4f7fee6ed178,
+0x06f067aa72176fba, 0x0a637dc5a2c898a6, 0x113f9804bef90dae, 0x1b710b35131c471b,
+0x28db77f523047d84, 0x32caab7b40c72493, 0x3c9ebe0a15c9bebc, 0x431d67c49c100d4c,
+0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817
+]
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 15: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+mk_buggy_fib_no_init : {a} (fin a, a >= 1) => [a] ->
+  ([1], ([8], [8], [a])) -> ([8], ([8], [8], [a]))
+mk_buggy_fib_no_init magic (_, (fn, fn1, k)) = (fn', (fn1, fn2, k+1))
+  where
+  fn2 = fn + fn1
+  // Change output when state has magic value.
+  fn' = fn + if k == magic then 1 else 0
+
+generate : {n, ix, a} (fin ix, fin n, n >= 1, ix >= width (n - 1)) => ([ix] -> a) -> [n]a
+generate f = [ f i | i <- [0 .. n-1] ]
+
+infixl 1 $
+f $ x = f x
+
+foo : [10][4]
+foo = generate $ \(i:[8]) -> if i == 0 then 1 else foo@(i-1)
+
+bar : [10][4]
+bar = generate \(i:[8]) -> if i == 0 then 1 else foo@(i-1)
+
+
+mk_buggy_fib_no_init : {a} (fin a, a >= 1) => [a] ->
+  ([1], ([8], [8], [a])) -> ([8], ([8], [8], [a]))
+mk_buggy_fib_no_init magic (_, (fn, fn1, k)) = (fn', (fn1, fn2, k+1))
+  where
+  fn2 = fn + fn1
+  // Change output when state has magic value.
+  fn' = fn + if k == magic then 1 else 0
+
+generate : {n, ix, a} (fin ix, fin n, n >= 1, ix >= width (n - 1)) => ([ix] -> a) -> [n]a
+generate f = [ f i | i <- [0 .. n-1] ]
+
+infixl 1 $
+f $ x = f x
+
+foo : [10][4]
+foo = generate $ \(i:[8]) -> if i == 0 then 1 else foo@(i-1)
+
+bar : [10][4]
+bar = generate \(i:[8]) -> if i == 0 then 1 else foo@(i-1)
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 16: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+unflatten : {r, w}
+  (fin r, 5 * w >= r, fin w) =>
+    [r] -> [w][5]
+unflatten p = groupBy`{5} (p # zero)
+```
+[GENERATE END]
+
+[RESULT] Task 17: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+mk_curve_ops p =
+  { field = p
+  , v1 = ec_v1 p
+  , v2 = ec_v2 { field = p, v0 = x }
+  }
+
+ec_v1 : {t} (fin t) => [t] -> [t]
+ec_v1 x = x
+
+ec_v2 : {t} (fin t) => {field : [t], v0 : [t]} -> [t]
+ec_v2 x = x.v0 + x.field.v0
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 18: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module T038 where
+
+interface submodule I where
+  x : [8]
+
+submodule F where
+  import interface submodule I
+
+  y = x + 1
+
+submodule P where
+  import submodule F
+  export submodule Q
+
+submodule Q where
+  x = 11
+
+interface submodule J where
+  import submodule F via submodule P
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 19: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+foreign foreignAndCryptol : [32] -> [32]
+foreignAndCryptol x = x
+
+foreign foreignAndNoCryptol : [32] -> [32]
+
+noForeignAndCryptol : [32] -> [32]
+noForeignAndCryptol x = x + 3
+
+foreign noForeignAndNoCryptol : [32] -> [32]
+```
+[GENERATE END]
+
+[RESULT] Task 20: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES128
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES192
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256
+
+parameter
+    type KeySize : #
+    type constraint (KeySize == 128 + 64 * n, n >= 2)
+
+type K = [KeySize]
+type Nb = 4
+type Nr = 6 + n
+type State = [4][Nb][8]
+
+expandKey : K -> [Nr+1]State
+expandKey = expandKey`{KeySize}
+
+encrypt : K -> [128] -> [128]
+encrypt k pt = join (AES.encrypt (expandKey k) (split pt))
+
+decrypt : K -> [128] -> [128]
+decrypt k ct = join (AES.decrypt (expandKey k) (split ct))
+
+property test k pt = decrypt k (encrypt k pt) == pt
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 21: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+
+```
+[GENERATE END]
+
+[RESULT] Task 22: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+fnv1a : {n} (fin n) => [n] -> [64]
+fnv1a msg = foldl processBlock (offsetBasis : [64]) (pad msg)
+
+type blockSize = 32
+
+type FnvPrime = 1099511628211
+
+type offsetBasis = 14695981039346656037
+
+pad : {n} (fin n) => [n] -> [((n + 7)/8 * 8)]
+pad msg = msg # zero
+
+processBlock : [64] -> [blockSize] -> [64]
+processBlock h b = h ^ (b # zero) * FnvPrime
+testsPass = fnv1a [] == 0xcbf29ce484222325
+	&& fnv1a "a" == 0xaf63dc4c80011cc3
+	&& fnv1a "foobar" == 0x85d91e7742849317
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 23: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Keyless::Hash::SHA2::Instantiations::SHA384 =
+    Primitive::Keyless::Hash::SHA2::SHA2 where
+
+        type w = 64
+        type DigestSize = 384
+        H0 = [
+            0x9dd1b4dc7d2dd99d, 0x2bbbe8bfe7fd9595,
+            0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
+            0x510e527fade682d1, 0x9b05688c2b3e6c1f,
+            0x1f83d9abfb41bd6b, 0x5be0cd19137e2179
+        ]
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 24: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Keyless::Hash::SHA3::Tests::SHAKE256 where
+
+import Primitive::Keyless::Hash::SHA3::KeccakBitOrdering as KBO
+import Primitive::Keyless::Hash::SHA3::Instantiations::SHAKE256
+
+property k5 = xof [] == expected_result where
+    expected_result = join [
+        0x974a5c987d3e914f661664540000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000
+    ]
+
+property k6 = xof 0b0 == expected_result where
+    expected_result = join [
+        0x974a5c987d3e914f661664540000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000
+    ]
+
+property k7 = xof 0b11 == expected_result where
+    expected_result = join [
+        0x974a5c987d3e914f661664540000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000
+    ]
+
+property k8 = xof 0b110 == expected_result where
+    expected_result = join [
+        0x974a5c987d3e914f661664540000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000000000000000000000000000000
+    ]
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 25: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Keyless::Hash::SHA2::Tests::SHA3_224 where
+
+import Primitive::Keyless::Hash::SHA2::Instantiations::SHA3_224 as SHA3_224
+
+property t1 = SHA3_224::hash [] == output where
+    output = join [
+        0x6b86b273ff9e14d64ffda044a010a820,
+        0xf4c26c35e1548cdd159f310dbc826a11,
+        0x465d9f2fcf8b167f08af437bd3fa912b
+    ]
+
+property t5 = SHA3_224::hash "abc" == output where
+    output = join [
+        0x204a8fca2aad73103d09f691e255bf6b,
+        0x3f4bcda32ce179003ede342f6185007f,
+        0xe3f94ec63f08dd515adeeb3da71195c3
+    ]
+
+property t72 = SHA3_224::hashBytes (join "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq") == output where
+    output = join [
+        0x167905909cbf19231c31459e7f7e0e95,
+        0x8714097fb74db2e05318251ecb524f6c,
+        0x3c7716a71695aafe368c0da9ecf6751d
+    ]
+
+property t512 = SHA3_224::hash (join "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu") == output where
+    output = join [
+        0xa7ad6fea7c720e2c5a75c178c2a01a6f,
+        0x2e0e2a9d2e8c5397bf2f384ff98c90dc,
+        0x3d3e1394694500237acc10ecc69de102
+    ]
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 26: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+type P = Bit
+type C = Bit
+
+heterosexual : P -> P -> C -> Bit
+heterosexual mom dad kid = ~(mom == dad)
+
+kid_lies : P -> P -> C -> Bit
+kid_lies mom dad kid = kid == ~(mom ^ dad)
+
+parents_say : P -> P -> C -> Bit
+parents_say mom dad kid = (mom && ~kid) || (~mom && kid)
+
+people_types : P -> P -> C -> Bit
+property people_types mom dad kid =
+  (heterosexual mom dad kid) /\ (kid_lies mom dad kid) /\ (parents_say mom dad kid)
+
+checkit1 : P -> P -> C -> Bit
+property checkit1 mom dad kid =
+  (heterosexual mom dad kid) == (mom != dad)
+
+checkit2 : P -> P -> C -> Bit
+property checkit2 mom dad kid =
+  (kid_lies mom dad kid) == kid
+```
+[GENERATE END]
+
+[RESULT] Task 27: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+Ch_Alternate : {w} (fin w, w >= 1) => [w] -> [w] -> [w] -> [w]
+Ch_Alternate x y z = (x /\ y) \/ (~x /\ z)
+
+Ch_Alternate : {w} (fin w, w >= 1) => [w] -> [w] -> [w] -> [w]
+Ch_Alternate x y z = (x /\ y) \/ (~x /\ z)
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 28: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+mod_add_Z : (Integer, Integer, Integer) -> Integer
+mod_add_Z (n, x, y) = (x + y) % n
+```
+[GENERATE END]
+
+[RESULT] Task 29: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+mod_mul_Z : (Integer, Integer, Integer) -> Integer
+mod_mul_Z (m, x, y) = (x * y) % m
+
+mod_sq_Z : (Integer, Integer) -> Integer
+mod_sq_Z (m, x) = mod_mul_Z (m, x, x)
+```
+[GENERATE END]
+
+[RESULT] Task 30: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+mod_half_Z : (Integer, Integer) -> Integer
+mod_half_Z (p, x) = if (x % 2 == 0) then x / 2 else (x + p) / 2
+
+
+mod_half_Z : (Integer, Integer) -> Integer
+mod_half_Z (p, x) = if (x % 2 == 0) then x / 2 else (x + p) / 2
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 31: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+messageSch : [16][64] -> [80][64]
+messageSch M = M # [ sigma1 (W@i-2) ^ sigma0 (W@i-7) ^ (W@i-15) ^ (W@i-16)
+                   | i <- [16..79]
+                   ]
+sigma0 : [64] -> [64]
+sigma0 x = (x >>> 28) ^ (x >>> 34) ^ (x >>> 39)
+sigma1 : [64] -> [64]
+sigma1 x = (x >>> 14) ^ (x >>> 18) ^ (x >>> 41)
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 32: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_KeyWrap
+
+
+check_KWP_AE key pt expected_ct = KWP_AE key pt == expected_ct
+/* pragma tcId1080 : property */
+tcId1080 =
+  testPassed == check_KWP_AE key pt ct
+  where
+    testPassed = True
+    key =
+      0x3ea9325069ed93a96c331bdd6dd766ec64bbba83a72c69ed75df55043fb0bfd1
+    pt = 0x06
+    ct = 0x40a9c42012ba38211b800e6e313b6876
+```
+[GENERATE END]
+
+[RESULT] Task 33: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+
+```
+[GENERATE END]
+
+[RESULT] Task 34: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Asymmetric::KEM::McEliece::Operations where
+
+import Common::utils
+import Primitive::Asymmetric::KEM::McEliece::Types
+import Primitive::Asymmetric::KEM::McEliece::Hashing
+
+crypto_kem_enc : (Ct, Ss)
+crypto_kem_enc = (ct, ss)
+
+  where
+    // Generate random seed
+    seed : Seed
+    seed = gen_random_seed
+
+    // Hash seed to get public key
+    pk : PublicKey
+    pk = hash_seed_to_pk seed
+
+    // Generate random mask
+    mask : Mask
+    mask = gen_random_mask
+
+    // Hash mask to get secret key
+    ss : Ss
+    ss = hash_mask_to_ss mask
+
+    // Encrypt mask using public key
+    ct : Ct
+    ct = encrypt_mask pk mask
+
+crypto_kem_dec : (Ct, Ss) -> (Bit, Pt)
+crypto_kem_dec (ct, ss') = (is_equal, pt)
+
+  where
+    // Decrypt ciphertext using secret key
+    pt : Pt
+    pt = decrypt_ct ct ss'
+
+    // Compare secret keys
+    is_equal : Bit
+    is_equal = ss' == ss
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 35: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Asymmetric::KEM::McEliece::Util where
+
+import Types
+
+load2 : [128] -> [2][64]
+load2 x = split x
+
+bitrev : {n} (fin n, n >= 1) => [n] -> [n]
+bitrev x = join (reverse (split x))
+
+store8 : [64] -> [8][8]
+store8 x = split x
+
+load8 : [8][8] -> [64]
+load8 x = join x
+
+transpose_64x64 : [64][64] -> [64][64]
+transpose_64x64 x = [ row i | i <- [0...63] ]
+    where row i = [ x @ j @ i | j <- [0...63] ]
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 36: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+
+```
+[GENERATE END]
+
+[RESULT] Task 37: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+module HMAC where
+
+import SHA256
+
+type KeySize = 64
+type MsgSize = 64
+type HmacSize = 256
+
+hmacSHA256 : {keyLen, msgLen} (fin keyLen, fin msgLen) => [keyLen][8] -> [msgLen][8] -> [HmacSize]
+hmacSHA256 k m = hmac k m
+
+kinit : {keyLen} (fin keyLen) => [keyLen][8] -> [KeySize][8]
+kinit k = take `{KeySize} (k # repeat 0)
+
+hmac : {keyLen, msgLen} (fin keyLen, fin msgLen) => [KeySize][8] -> [msgLen][8] -> [HmacSize]
+hmac k m = sha256 ((k' ^ opad) # sha256 ((k' ^ ipad) # m))
+    where
+        k' = kinit k
+        ipad = repeat 0x36
+        opad = repeat 0x5c
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 38: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Frobenius where
+
+import Parameters as P
+import FrobeniusElt
+
+property fp2_frobenius_prop = fp2_frobenius == F_expt where
+    fp2_frobenius = frobenius (P::Fp_2`{t=Z}) x
+    F_expt = P::p ^^ 2
+    x = {a = 1, b = 2}
+
+property f6_frobenius_prop = fp6_frobenius == F_expt where
+    fp6_frobenius = frobenius (P::Fp_6`{t=Z}) x
+    F_expt = P::p ^^ 6
+    x = {a = 1, b = 2, c = 3}
+
+property f12_frobenius_prop = fp12_frobenius == F_expt where
+    fp12_frobenius = frobenius (P::Fp_12`{t=Z}) x
+    F_expt = P::p ^^ 12
+    x = {a = 1, b = 2, c = 3, d = 4, e = 5, f = 6}
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 39: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Core::BLS::Verify where
+
+import Common::FieldExtras
+import Common::ModDiv
+import Core::BLS::Pairing
+import Core::BLS::Parameters
+import Core::BLS::Serialize
+import Core::BLS::Signature
+import Core::BLS::Types
+
+core_verify_pk_in_g1 : PublicKey -> BLSSignature -> Message -> DST -> Bool
+core_verify_pk_in_g1 pk sig msg dst = Fp_12.is_equal e1 e2 where
+    e1 = bls_ate_pairing pk' hmsg
+    e2 = bls_ate_pairing BP sig'
+    pk' = hash_to_curve_opt pk dst
+    hmsg = hash_to_curve_opt msg dst
+    sig' = sig
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 40: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+
+```
+[GENERATE END]
+
+[RESULT] Task 41: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+
+```
+[GENERATE END]
+
+[RESULT] Task 42: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+
+```
+[GENERATE END]
+
+[RESULT] Task 43: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+update : [16] -> [4] -> [4] -> [16]
+update x y v = x && ~m || v << y
+  where m = 0xf << y
+
+updateEnd : [16] -> [4] -> [4] -> [16]
+updateEnd x y v = update x (15 - y) v
+
+property wordUpdate x y v =
+  update x y v == (x @@ ([15, 14 .. y+1]) # v) << y
+
+property wordUpdate2 x y v =
+  update x y v == (x @@ ([15, 14 .. y+1]) # v) << y
+
+property wordUpdateEnd x y v =
+  updateEnd x y v == (x @@ ([15, 14 .. y+1]) # v) << (15 - y)
+
+property wordUpdateEnd2 x y v =
+  updateEnd x y v == (x @@ ([15, 14 .. y+1]) # v) << (15 - y)
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 44: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+xor : {a} ([a], [a]) -> [a]
+xor (x, y) = [i != j | i <- x | j <- y]
+
+check24 = all (\x -> all (\y -> xor (x, y) == x ^ y)) [0..15]
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 45: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+xs = [ (i, j)
+      | i <- [1...4]
+      | j <- [1...4]
+      ]
+
+check28 = ~zero == [ x == y | (x,y) <- xs ]
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 46: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+type f n = [n + 1]Bit
+zero : {n} f n
+zero = repeat False
+
+type ff n = [2 * n]Bit
+zero : {n} ff n
+zero = repeat False
+
+type gg n = [n / 2]Bit
+zero : {n} gg n
+zero = repeat False
+
+type jj n = [n - 1]Bit
+zero : {n} jj n
+zero = repeat False
+
+type kk n = [2 * n - 1]Bit
+zero : {n} kk n
+zero = repeat False
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 47: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+submodule A where
+  type T = [8]
+
+submodule S where
+  import submodule A
+
+  x : T
+  x = 15
+
+submodule F where
+  import submodule A
+
+  y : T
+  y = 2 * x
+
+submodule I where
+  import submodule A
+
+  x : T
+  x = 28
+
+submodule M = submodule F { submodule I }
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 48: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Asymmetric::Signature::MLDSA::Reference where
+
+import Common::utils(BVtoZ)
+
+type KeySize = 256
+type ContextSize = 128
+type MessageSize = 256
+
+type KeyPair = {privKey : [KeySize], pubKey : [KeySize]}
+type Signature = [KeySize]
+
+KeyGen : {n} (fin n) => () -> KeyPair
+KeyGen _ = undefined
+
+Sign : {n} (fin n) => KeyPair -> [MessageSize] -> [ContextSize] -> Signature
+Sign _ _ _ = undefined
+
+Verify : {n} (fin n) => KeyPair -> [MessageSize] -> [ContextSize] -> Signature -> Bit
+Verify _ _ _ _ = undefined
+
+property MLDSAIsCorrect = True
+```
+[GENERATE END]
+
+[RESULT] Task 49: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+
+```
+[GENERATE END]
+
+[RESULT] Task 50: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Asymmetric::Signature::XMSS::Instantiations::XMSS_SHA2_10_256 =
+    Primitive::Asymmetric::Signature::XMSS::Specification {
+        Parameters = Primitive::Asymmetric::Signature::XMSS::ParameterSets::XMSS_SHA2_10_256,
+        WOTS = Primitive::Asymmetric::Signature::WOTS::Instantiations::WOTSP_SHA2_256
+    }
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 51: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Keyless::Hash::Keccak::Utils where
+
+import Common::utils
+
+type Keccak = 1600
+
+toBytes : {n} (fin n) => [n] -> [n /^ 8][8]
+toBytes x = split x
+
+fromBytes : {n} (fin n) => [n /^ 8][8] -> [n]
+fromBytes x = join x
+
+reverseBitOrdering : {n} (fin n) => [n] -> [n]
+reverseBitOrdering x = join (reverse (split x))
+
+h2b : {n} (fin n) => [Keccak / 8][8] -> [Keccak]
+h2b x = join x
+
+b2h : {n} (fin n) => [Keccak] -> [Keccak / 8][8]
+b2h x = split x
+
+property h2bAndb2hInvert x = b2h (h2b x) == x
+
+property b2hAndh2bInvert x = h2b (b2h x) == x
+
+example : Bit
+property example = h2bAndb2hInvert x /\ b2hAndh2bInvert x
+    where
+        x = 0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 52: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Keyless::Hash::SHA2::Tests::SHA224 where
+
+import Primitive::Keyless::Hash::SHA2::Instantiations::SHA224 as SHA224
+
+property testsPassed = and tests
+
+tests : [4]Bit
+tests =
+  [ SHA224::hash "abc" == expected0
+  , SHA224::hash ""    == expected1
+  , SHA224::hash alphabet448 == expected2
+  , SHA224::hash alphabet896 == expected3
+  ]
+
+expected0 = join [
+  0x238015a3e2d1cd99,
+  0x98db785d174f61ef,
+  0x43ccdc8195ec289b
+  ]
+
+expected1 = join [
+  0xd14a028c2a3a2bc9,
+  0x4761c62685b865e2,
+  0xabf1b8b3514df2d5
+  ]
+
+alphabet448 = repeat 'a' @@ [0..447]
+
+expected2 = join [
+  0x70e2e4d4ec72007f,
+  0x98a294fb44e79697,
+  0x641649288700395f
+  ]
+
+alphabet896 = repeat 'a' @@ [0..895]
+
+expected3 = join [
+  0x16248a7c917c4759,
+  0x407974d0e2607928,
+  0x650145466b903014
+  ]
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 53: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+import HMAC_SHA384
+
+property testsPass = all testsPassed
+
+type TestVector = { key : [256], msg : [256], expected : [384] }
+type TruncateTestVector = { key : [256], msg : [256], expected : [192] }
+
+testsPassed : [10]Bit
+testsPassed =
+  [HMAC_SHA384 k m == e | k <- keys | m <- msgs | e <- expecteds]
+
+keys : [10][256]
+keys =
+  [zero,
+  zero # 0x01,
+  zero # 0x02,
+  zero # 0x03,
+  zero # 0x04,
+  zero # 0x05,
+  zero # 0x06,
+  zero # 0x07,
+  zero # 0x08,
+  zero # 0x09]
+
+msgs : [10][256]
+msgs =
+  [zero,
+  zero # 0x0a,
+  zero # 0x0b,
+  zero # 0x0c,
+  zero # 0x0d,
+  zero # 0x0e,
+  zero # 0x0f,
+  zero # 0x10,
+  zero # 0x11,
+  zero # 0x12]
+
+expecteds : [10][384]
+expecteds =
+  [0x3cb002dc2596ef67a0e4d6a99a4ed8fa0fc5178c5f44da7f77959854a9c0b7ad07679694a59aaac220e61225810376e57a706f97f88a779e0f64ec4e6ae6064,
+  0x094161727bd64463f7122720e479547279c8277fc95c1004384c90dc297e2d5b7a5138540a104ba160799410056725a5b0a560a75e2473a014286711453302,
+  0x7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d906975c0027a717528234dfb57037b486a7070e0c65b0f876dea39ab731deb67e093,
+  0x601f60cc80a45d0242103293b63f92343970363d0ce31041947829764863019415293c2641042455d79a7900567115441f0e4144f48a6b0f05d60ced4e74a,
+  0x773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe3013569d653badc19af08638c08a12f403642a412019b292a745968e0f1fff9,
+  0x82558a389a443c0ea4cc819899f2083a85f0af60d2c71a7ff7c9cd1b7d09b2c621d57a3a5605ca62791b3f79f47b12d0310a71da69e7c1290a967b2763104ed,
+  0xa9a99745195c3aa9f24cf69cc1e8744164f75f092a5e40d8179a295a3e25e96509a9f3e9f7e0a09918e8189c158b720f6a536e213763be01548ef837fe7a0ae,
+  0x56461ef2342edc00f9bab995690efd4ccf01e9b5ff092c0e9c53cc4565a9f24fc646ceaa6f6fbcef465b0bedf722c7fe95fdb0577c8b5ef67f5c9d7310bf14,
+  0x891353a44fe6b5e85e4032aff03d964b5c9829a9e37d0fa3e3c544e4e8f2872768d50ee58c03a5c8777f7e0ce650f7a810470e1a04248474048fce3a670996a,
+  0x9b09ffa71660e60f1c1f5781e49f31623d9a238a52193ea6e415410e7a0016637a0c655aaca929d3db57a0abb6c18a8d0a76742e7bbd6b8ca7993767c5d16b]
+
+truncTestsPassed : [10]Bit
+truncTestsPassed =
+  [HMAC_SHA384 k m == e' | k <- keys | m <- msgs | e <- expecteds | e' <- expectedTruncs]
+
+expectedTruncs : [10][192]
+expectedTruncs =
+  [take e | e <- expecteds]
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 54: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::CipherInterface where
+
+import Common::utils
+
+type KeySize = 128
+
+type BlockSize = 128
+
+encrypt : [KeySize] -> [BlockSize] -> [BlockSize]
+encrypt k m = undefined
+
+decrypt : [KeySize] -> [BlockSize] -> [BlockSize]
+decrypt k c = undefined
+```
+[GENERATE END]
+
+[RESULT] Task 55: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Modes::CFB where
+
+import interface Primitive::Symmetric::Cipher::Block::CipherInterface as C
+
+type CFB n = { encrypt : [n] -> [n]
+             , decrypt : [n] -> [n]
+             }
+
+cfbEncrypt : {n} (fin n) => CFB n -> [n] -> [inf] -> [inf]
+cfbEncrypt cfb iv ps =
+  cs'
+  where
+    cs = [iv] # [ cfb.encrypt (cs'@i) | i <- [0..] ]
+    cs' = map cfb.encrypt (ps # cs)
+
+cfbDecrypt : {n} (fin n) => CFB n -> [n] -> [inf] -> [inf]
+cfbDecrypt cfb iv cs =
+  ps
+  where
+    cs' = map cfb.encrypt (cs # [iv])
+    ps = [ cfb.decrypt (cs'@(i+1)) ^ cs'@i | i <- [0..] ]
+
+property encryptCorrect K IV Ps =
+  decrypt K IV (encrypt K IV Ps) == Ps
+  where
+    type n = 64
+    type m = 8
+    encrypt = cfbEncrypt `{n} (C::encrypt `{m} K)
+    decrypt = cfbDecrypt `{n} (C::decrypt `{m} K)
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 56: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Simon::Instantiations::Simon128_128 =
+    Primitive::Symmetric::Cipher::Block::Simon::Specification where
+
+        type n = 64
+        type m = 2
+        type T = 68
+        type j = 2
+```
+[GENERATE END]
+
+[RESULT] Task 57: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Simon::Instantiations::Simon128_256 =
+    Primitive::Symmetric::Cipher::Block::Simon::Specification where
+
+        type n = 64
+        type m = 4
+        type T = 72
+        type j = 4
+```
+[GENERATE END]
+
+[RESULT] Task 58: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Modes::Tests::AES256_CTR where
+
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_CTR as AES256_CTR
+
+property aes256_ctr_encrypt_vector = ~zero == AES256_CTR::encrypt k iv plaintext
+    where
+        k = 0x8000000000000000000000000000000000000000000000000000000000000000
+        iv = 0x000102030405060708090a0b0c0d0e0f
+        plaintext = [
+            0x6bc1bee22e409f96e93d7e117393172a,
+            0xae2d8a571e03ac9c9eb76fac45af8e51,
+            0x30c81c46a35ce411e5fbc1191a0a52ef,
+            0xf69f2445df4f9b17ad2b417be66c3710
+        ]
+
+property aes256_ctr_decrypt_vector = ~zero == AES256_CTR::decrypt k iv ciphertext
+    where
+        k = 0x8000000000000000000000000000000000000000000000000000000000000000
+        iv = 0x000102030405060708090a0b0c0d0e0f
+        ciphertext = [
+            0x6bc1bee22e409f96e93d7e117393172a,
+            0xae2d8a571e03ac9c9eb76fac45af8e51,
+            0x30c81c46a35ce411e5fbc1191a0a52ef,
+            0xf69f2445df4f9b17ad2b417be66c3710
+        ]
+```
+[GENERATE END]
+
+[RESULT] Task 59: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES192_CFB =
+    Primitive::Symmetric::Cipher::Block::Modes::CFB {
+        Primitive::Symmetric::Cipher::Block::AES::Instantiations::AES192
+    }
+```
+[GENERATE END]
+
+[RESULT] Task 60: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES128_CFB where
+import Primitive::Symmetric::Cipher::Block::Modes::CFB
+import Primitive::Symmetric::Cipher::Block::AES::Instantiations::AES128
+type KeySize = 128
+type BlockSize = 128
+type IVSize = 128
+cfb = CFB { blockSize = BlockSize, encrypt = AES128.encrypt }
+encrypt = cfb.encrypt
+decrypt = cfb.decrypt
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 61: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module HostValues where
+
+import Array
+import Values
+
+type Heap = Array [64] (Array [64] [64])
+
+data VecRepresentation =
+  | VecRepresentation { heap : Heap
+                      , nextFree : [64]
+                      }
+
+vec_representation_alloc : {a} (fin a) => VecRepresentation -> [a]Value -> ([64], VecRepresentation)
+vec_representation_alloc vec val = (nextFree', vec')
+  where
+    nextFree' = vec.nextFree + 1
+    vec' = VecRepresentation { heap = update vec.heap vec.nextFree (arrayFromList val)
+                             , nextFree = nextFree'
+                             }
+
+vec_representation_lookup : VecRepresentation -> [64] -> Value
+vec_representation_lookup vec idx = vec.heap @ idx
+
+data MapRepresentation =
+  | MapRepresentation { heap : Heap
+                      , nextFree : [64]
+                      }
+
+map_representation_alloc : {a} (fin a) => MapRepresentation -> ([64], [a]Value) -> ([64], MapRepresentation)
+map_representation_alloc map (key, val) = (nextFree', map')
+  where
+    nextFree' = map.nextFree + 1
+    map' = MapRepresentation { heap = update map.heap map.nextFree (arrayFromList val)
+                             , nextFree = nextFree'
+                             }
+
+map_representation_lookup : MapRepresentation -> [64] -> ([64], Value)
+map_representation_lookup map idx = (idx, map.heap @ idx)
+
+map_representation_equiv : {a} (fin a) => ([64] -> [64] -> Bit) -> MapRepresentation -> MapRepresentation -> Bit
+map_representation_equiv cmp m1 m2 = all (equiv m1 m2) (indices m1)
+  where
+    indices m = take `{a} (iterate (\i -> i + 1) 0)
+    equiv m1 m2 i = if cmp i (-1) then True else m1.heap @ i == m2.heap @ i
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 62: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+type GF28 = [8]
+gf28Mult : (GF28, GF28) -> GF28
+gf28Mult (x, y) = pmod (pmult x y) <| x^8 + x^4 + x^3 + x + 1 |>
+gf28Pow : (GF28, [8]) -> GF28
+gf28Pow (n, k) =
+  pow k
+  where
+    sq x = gf28Mult (x, x)
+    odd x = x ! 0
+    pow i =
+      if i == 0
+      then 1
+      else if odd i
+           then gf28Mult (n, sq (pow (i >> 1)))
+           else sq (pow (i >> 1))
+gf28Inverse : GF28 -> GF28
+gf28Inverse x = gf28Pow (x, 254)
+aesAffine : GF28 -> GF28
+aesAffine x =
+  gf28Add (gf28Mult (0x63, x), 0x05)
+aesSBox : GF28 -> GF28
+aesSBox x = aesAffine (gf28Inverse x)
+aesSBoxTable = [[aesSBox (i + j * 256) | i <- [0 .. 255]] | j <- [0 .. 15]]
+/* pragma cell00 : property */
+cell00 = aesSBoxTable @ 0 @ 0 == 0x63
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 63: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+usaf : [1][8] -> [10][8] -> [1][8]
+usaf a b = [(if (a@0) < (b@0) then (a@0) else (b@0))]
+
+saf : [1][8] -> [10][8] -> [1][8]
+saf a b = [(if (a@0) < (b@0) then (a@0) else (b@0))]
+```
+[GENERATE END]
+
+[RESULT] Task 64: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+type Circle = { x : Float64, y : Float64, r : Float64 }
+type Displacement = { dx : Float64, dy : Float64 }
+type BMI = { weight : Float64, height : Float64 }
+
+areaCircle : Circle -> Float64
+areaCircle c = pi * c.r * c.r
+
+nudgeCircle : Circle -> Displacement -> Circle
+nudgeCircle c d = { x = c.x + d.dx, y = c.y + d.dy, r = c.r }
+
+calcBMI : BMI -> Float64
+calcBMI b = b.weight / (b.height * b.height)
+
+calcBMIimp : BMI -> Float64
+calcBMIimp b = bmi where bmi = b.weight / (b.height * b.height)
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 65: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+module Primitive::Asymmetric::Signature::ECDSA::P384 where
+
+import Common::ModDivZ
+import Common::utils
+import Primitive::Asymmetric::Signature::ECDSA::ECDSA
+import Primitive::Asymmetric::Signature::ECDSA::Instantiations::P384
+
+property p384_point_add = ec_point_add P384 G H == J
+property p384_point_sub = ec_point_sub P384 J H == G
+property p384_point_dbl = ec_point_dbl P384 G == H
+property p384_scalar_mul = ec_point_mul P384 d G == Q
+property p384_twin_mul = ec_point_mul P384 d G == ec_point_mul P384 e H
+
+property p384_sign_correct = verify P384 Q d M == True
+property p384_sign_reject = verify P384 Q d' M == False
+
+  where
+    M = "message"
+    d = 0x962b5d17e7a8f01150942610160c2187420447203640677760045457301754434031353426743672948959858767676467886175996549989863126474311695184377
+    d' = 0x962b5d17e7a8f01150942610160c2187420447203640677760045457301754434031353426743672948959858767676467886175996549989863126474311695184378
+    Q = 0xc6444608260067656358365055627666520864079868025155064683267267708489652905418666790569015481449069620297618559656831183976015
+    G = 0x1a1d04a923cc91d52a97e2145e9474780135115715095640478605665635449006508951927726563883387676486376728178763618741648529208691758
+    H = 0x99242497ed00451f7701967890808720988987766639085567886006088896670068961953859186430827785624077261845867951645621081935266339
+    J = 0x4950767528895196685719218380425855373978444118115299989786776603567465721186466588463151177418986833591738664066615985776319
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 66: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+newtype CplxInt = { real : Integer, imag : Integer }
+
+cplxAdd : CplxInt -> CplxInt -> CplxInt
+cplxAdd x y = CplxInt { real = r, imag = i }
+  where
+    r = x.real + y.real
+    i = x.imag + y.imag
+
+cplxEq : CplxInt -> CplxInt -> Bit
+cplxEq x y = x.real == y.real && x.imag == y.imag
+
+cplxMul : CplxInt -> CplxInt -> CplxInt
+cplxMul x y = CplxInt { real = r, imag = i }
+  where
+    r = x.real * y.real - x.imag * y.imag
+    i = x.real * y.imag + x.imag * y.real
+
+cplxAddAssoc : CplxInt -> CplxInt -> CplxInt -> Bit
+property cplxAddAssoc x y z =
+  cplxEq (cplxAdd x (cplxAdd y z)) (cplxAdd (cplxAdd x y) z)
+
+cplxMulAssoc : CplxInt -> CplxInt -> CplxInt -> Bit
+property cplxMulAssoc x y z =
+  cplxEq (cplxMul x (cplxMul y z)) (cplxMul (cplxMul x y) z)
+
+cplxMulDistrib : CplxInt -> CplxInt -> CplxInt -> Bit
+property cplxMulDistrib x y z =
+  cplxEq (cplxMul x (cplxAdd y z))
+         (cplxAdd (cplxMul x y) (cplxMul x z))
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 67: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+foldFunction : ([8], [16], [16]) -> [16] -> [16] -> [8]
+foldFunction (a, b, c) x y = a
+foldFunction' : ([8], [16], [16]) -> [16] -> [16] -> [8]
+foldFunction' x y z = x.0
+/* pragma foldFunctionInverse : property */
+foldFunctionInverse x y z =
+  foldFunction' (foldFunction x y z) y z == x
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 68: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+type GF28 = [8]
+gf28Mult : (GF28, GF28) -> GF28
+gf28Mult (x, y) =
+  pmod (pmult x y)
+    0b10001101  // irreducible polynomial for GF(2^8)
+toBytes : [32] -> [4][8]
+toBytes x = split (split x)
+fromBytes : [4][8] -> [32]
+fromBytes x = join (join x)
+type State = [4][4]GF28
+invMixColumns : State -> State
+invMixColumns state =
+  [fromBytes
+    [gf28Mult (0x0e, b) ^ gf28Mult (0x0b, a) ^ gf28Mult (0x0d, d) ^ gf28Mult (0x09, c)
+    | a <- row
+    | b <- col @ 1
+    | c <- col @ 2
+    | d <- col @ 3
+    ]
+  | row <- state
+  | col <- transpose row
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 69: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+type Nb = 4
+
+type State = [4][Nb]Bit
+
+type RoundKey = State
+
+addRoundKey : {n} (fin n) => State -> [n]RoundKey -> RoundKey
+addRoundKey pt rks =
+  pt ^ (rks ! 0)
+
+doRounds : {n}
+  (fin n, n >= 1)
+  => ([State] -> RoundKey -> [State])
+  -> RoundKey
+  -> [n]RoundKey
+  -> RoundKey
+  -> State
+  -> State
+doRounds rnd initKey rks finalKey st =
+  finalSt
+  where
+    rk0 = addRoundKey st [initKey]
+    rks' = [rk0] # rks
+    rns = take `{n} (iterate rnd (zero, zero) rks')
+    (_, finalSt) = rns ! (n - 1)
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 70: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+sbox6 : [4][16][4]
+sbox6 =
+  [[12, 5, 4, 13, 1, 10, 0, 7, 6, 9, 8, 11, 3, 2, 15, 14],
+  [13, 8, 11, 5, 6, 15, 0, 3, 4, 7, 2, 12, 1, 10, 14, 9],
+  [10, 6, 9, 0, 12, 11, 7, 13, 15, 1, 3, 14, 5, 2, 8, 4],
+  [3, 15, 0, 6, 10, 1, 13, 8, 9, 4, 5, 11, 12, 7, 2, 14]]
+```
+[GENERATE END]
+
+[RESULT] Task 71: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+
+```
+[GENERATE END]
+
+[RESULT] Task 72: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+type Round = [16][32]
+type Block = [64][8]
+type Key = [32][8]
+type Nonce = [12][8]
+type Counter = [32][8]
+qround : [4][32] -> [4][32]
+qround [a0, b0, c0, d0] =
+  [a2, b4, c2, d4]
+  where
+    a1 = a0 + b0
+    d1 = d0 ^ a1
+    d2 = d1 <<< 16
+    c1 = c0 + d2
+    b1 = b0 ^ c1
+    b2 = b1 <<< 12
+    a2 = a1 + b2
+    d3 = d2 ^ a2
+    d4 = d3 <<< 8
+    c2 = c1 + d4
+    b3 = b2 ^ c2
+    b4 = b3 <<< 7
+cdround : [4][32] -> [4][32]
+cdround [a0, b0, c0, d0] =
+  [a2, b4, c2, d4]
+  where
+    a1 = a0 <<< 16
+    d1 = d0 ^ a1
+    d2 = d1 >>> 12
+    c1 = c0 + d2
+    b1 = b0 ^ c1
+    b2 = b1 <<< 8
+    a2 = a1 + b2
+    d3 = d2 ^ a2
+    d4 = d3 >>> 7
+    c2 = c1 + d4
+    b3 = b2 ^ c2
+    b4 = b3 <<< 16
+core : Round -> Round
+core r =
+  join
+    (groupByBy
+      (\x -> x / 4)
+      (join
+        (groupByBy
+          (\x -> x % 4)
+          (join (map cdround (groupByBy (\x -> x / 4) r)))))
+      4))
+kexp : [4][32] -> [4][32]
+kexp [a0, b0, c0, d0] =
+  [a0,
+  b0 + a0 <<< 18,
+  c0 + b0 <<< 7,
+  d0 + c0 <<< 14,
+  a0 + d0 <<< 21,
+  b0 + a0 <<< 18,
+  c0 + b0 <<< 7,
+  d0 + c0 <<< 14,
+  a0 + d0 <<< 21,
+  b0 + a0 <<< 18,
+  c0 + b0 <<< 7,
+  d0 + c0 <<< 14,
+  a0 + d0 <<< 21,
+  b0 + a0 <<< 18,
+  c0 + b0 <<< 7,
+  d0 + c0 <<< 14]
+iround : [4][32] -> [4][32] -> [4][32]
+iround [a0, b0, c0, d0] [a1, b1, c1, d1] =
+  [a0 + a1,
+  (b0 + b1) <<< 16,
+  (c0 + c1) <<< 12,
+  (d0 + d1) <<< 8,
+  (a0 + a1) <<< 7,
+  (b0 + b1) <<< 16,
+  (c0 + c1) <<< 12,
+  (d0 + d1) <<< 8,
+  (a0 + a1) <<< 7,
+  (b0 + b1) <<< 16,
+  (c0 + c1) <<< 12,
+  (d0 + d1) <<< 8,
+  (a0 + a1) <<< 7,
+  (b0 + b1) <<< 16,
+  (c0 + c1) <<< 12,
+  (d0 + d1) <<< 8]
+stream : Key -> Nonce -> Counter -> Round
+stream k n c =
+  take `{64} (iterate core (iround (kexp (split c)) (core (kexp (split n)))))
+encrypt : Key -> Nonce -> Counter -> Block -> Block
+encrypt k n c m =
+  map (^) m (stream k n c)
+rfctest03 =
+  encrypt k n c msg == out
+  where
+    k =
+      [0x00010203,
+      0x04050607,
+      0x08090A0B,
+      0x0C0D0E0F,
+      0x10111213,
+      0x14151617,
+      0x18191A1B,
+      0x1C1D1E1F,
+      0x20212223,
+      0x24252627,
+      0x28292A2B,
+      0x2C2D2E2F,
+      0x30313233,
+      0x34353637,
+      0x38393A3B,
+      0x3C3D3E3F]
+    n =
+      [0x000102030405060708090A0B,
+      0x0C0D0E0F1011121314151617]
+    c = [0x00000000]
+    msg =
+      [0x6bc1bee22e409f96,
+      0xe93d7e117393172a,
+      0xae2d8a571e03ac9c,
+      0x9eb76fac45af8e51,
+      0x30c81c46a35ce411,
+      0xe5fbc1191a0a52ef,
+      0xf69f2445df4f9b17,
+      0xad2b417be66c3710]
+    out =
+      [0x3ad77bb40d7a3660,
+      0xa89ecaf32466ef97,
+      0xf5d3d58503b9699d,
+      0x7e9113163cfbf17a,
+      0x2bfc679e25340164,
+      0x29efc9f657fad061,
+      0xcde6fa78ecce73f4,
+      0x8eacd12c29470936]
+```
+[GENERATE END]
+
+[RESULT] Task 73: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+
+```
+[GENERATE END]
+
+[RESULT] Task 74: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES128_ECB
+import Primitive::Symmetric::Cipher::Block::AES
+
+type AESTestVector n = {key : [n], pt : [n], ct : [n]}
+mct_ecb_decrypt_128 : [128] -> [128] -> [100](AESTestVector 128)
+mct_ecb_decrypt_128 k c =
+  take `{100}
+    [AESTestVector {key = k, pt = aesDecryptBlock (aes128DecryptSchedule k) ct', ct = ct'}
+    | ct' <- cs]
+  where
+    cs = [c] # [ct ^ (zero # ct') | ct <- cs | ct' <- cs']
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 75: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::AES::Instantiations::AES192
+
+
+type AESTestVector n = {key : [n], pt : [128], ct : [128]}
+mct_ecb_decrypt_192 : [192] -> [128] -> [100](AESTestVector 192)
+mct_ecb_decrypt_192 k iv =
+  take `{100}
+  [({key = k', pt = pt, ct = c})
+  | (c, k') <- aes192_decryption_iter k iv
+  | pt <- repeat iv]
+aes192_decryption_iter k c =
+  iterate (\(c', k') -> (aes192_decrypt k' c', update_key k')) (c, k)
+update_key k =
+  (k @@ ([37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 81, 85,
+           89, 93, 97, 101, 105, 109, 113, 117, 121, 125, 129,
+           133, 137, 141, 145, 149, 153, 157, 161, 165, 169,
+           173, 177, 181, 185, 189, 193, 197]))
+  # k @@ ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+           15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
+           28, 29, 30, 31, 32, 33, 34, 35, 36])
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 76: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_KeyWrap
+
+
+check_KWP_AE key pt expected_ct = KWP_AE key pt == expected_ct
+/* pragma tcId1069 : property */
+tcId1069 =
+  testPassed == check_KWP_AE key pt ct
+  where
+    testPassed = True
+    key =
+      0x2644ccf9d7c419a437c954c8141cbb2d60f57de10a5393554a14ccc72229e286
+    pt = 0xe0
+    ct = 0xda510b1d9a10255380655980a3a73536
+```
+[GENERATE END]
+
+[RESULT] Task 77: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_KeyWrap
+
+
+check_KWP_AE key pt expected_ct = KWP_AE key pt == expected_ct
+/* pragma tcId1080 : property */
+tcId1080 =
+  testPassed == check_KWP_AE key pt ct
+  where
+    testPassed = True
+    key =
+      0x3ea9325069ed93a96c331bdd6dd766ec64bbba83a72c69ed75df55043fb0bfd1
+    pt = 0x06
+    ct = 0x40a9c42012ba38211b800e6e313b6876
+```
+[GENERATE END]
+
+[RESULT] Task 78: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+pi16' : [16][64] -> [16][64]
+pi16' xs = xs @@ [0, 15, 2, 11, 6, 13, 4, 9, 14, 1, 8, 5, 10, 3, 12, 7 : [4]]
+```
+[GENERATE END]
+
+[RESULT] Task 79: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+type Dom n = {lo : [n], sz : [n]}
+interval : {n} (fin n) => [n] -> [n] -> Dom n
+interval l s = {lo = l, sz = s}
+range : {n} (fin n) => [n] -> [n] -> Dom n
+range lo hi = interval lo (hi - lo)
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 80: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+type Dom n = {lo : [n], sz : [n]}
+interval : {n} (fin n) => [n] -> [n] -> Dom n
+interval l s = {lo = l, sz = s}
+top : {n} (fin n) => Dom n
+top = interval 0 (~0)
+```
+[GENERATE END]
+
+[RESULT] Task 81: ALL PASS
+
+[GENERATE BEGIN]
+```cryptol
+type Dom n = {lo : [n], sz : [n]}
+mem : {n} (fin n) => Dom n -> [n] -> Bit
+mem a x = x - a.lo <= a.sz
+ubounds : {n} (fin n) => Dom n -> ([n], [n])
+ubounds a =
+  if carry a.lo a.sz then (0, ~0) else (a.lo, a.lo + a.sz)
+ule : {n} (fin n) => Dom n -> Dom n -> Bit
+ule a b =
+  if a.sz == 0 /\ b.sz == 0 then True
+  else if a.sz == 0 \/ b.sz == 0 then False
+  else (b.lo - a.lo) <= (a.sz + b.sz)
+correct_ule : {n}
+  (fin n, n >= 1) =>
+    Dom n -> Dom n -> [n] -> [n] -> Bit
+correct_ule a b x y =
+  ule a b ==> mem a x ==> mem b y ==> x <= y
+/* pragma o4 : property */
+o4 = correct_ule where type n = 16
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 82: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+type Dom n = {lo : [n], sz : [n]}
+interval : {n} (fin n) => [n] -> [n] -> Dom n
+interval l s = {lo = l, sz = s}
+singleton : {n} (fin n) => [n] -> Dom n
+singleton x = interval x 0
+neg : {n} (fin n) => Dom n -> Dom n
+neg a =
+  if a.sz == 0 then singleton (neg a.lo)
+  else interval (-a.sz - a.lo) a.sz
+singleton_neg : {n} (fin n) => [n] -> Bit
+property i08 = singleton_neg`{16}
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 83: HAS FAILURES
+
+[GENERATE BEGIN]
+```cryptol
+quarterround : [16][32] -> [16][32]
+quarterround [y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15] =
+  [z0, z1, z2, z3, z4, z5, z6, z7, z8, z9, z10, z11, z12, z13, z14, z15]
+  where
+    z0 = y0 + y4
+    z4 = y4 ^ z0 <<< 0x7
+    z8 = y8 + z4
+    z12 = y12 ^ z8 <<< 0x9
+    z1 = y1 + z12
+    z5 = z12 ^ z1 <<< 0xd
+    z9 = y9 + z5
+    z13 = y13 ^ z9 <<< 0x12
+    z2 = y2 + z13
+    z6 = z13 ^ z2 <<< 0xd
+    z10 = y10 + z6
+    z14 = y14 ^ z10 <<< 0x9
+    z3 = y3 + z14
+    z7 = z14 ^ z3 <<< 0x7
+    z11 = y11 + z7
+    z15 = y15 ^ z11 <<< 0x12
+rowround : [16][32] -> [16][32]
+rowround [y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15] =
+  [z0, z1, z2, z3, z4, z5, z6, z7, z8, z9, z10, z11, z12, z13, z14, z15]
+  where
+    [z0, z1, z2, z3] = quarterround [y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15]
+    [z4, z5, z6, z7] = quarterround [y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15, y0, y1, y2, y3]
+    [z8, z9, z10, z11] = quarterround [y8, y9, y10, y11, y12, y13, y14, y15, y0, y1, y2, y3, y4, y5, y6, y7]
+    [z12, z13, z14, z15] = quarterround [y12, y13, y14, y15, y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11]
+columnround : [16][32] -> [16][32]
+columnround [y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15] =
+  [z0, z1, z2, z3, z4, z5, z6, z7, z8, z9, z10, z11, z12, z13, z14, z15]
+  where
+    [z0, z4, z8, z12] = quarterround [y0, y4, y8, y12, y1, y5, y9, y13, y2, y6, y10, y14, y3, y7, y11, y15]
+    [z1, z5, z9, z13] = quarterround [y1, y5, y9, y13, y0, y4, y8, y12, y3, y7, y11, y15, y2, y6, y10, y14]
+    [z2, z6, z10, z14] = quarterround [y2, y6, y10, y14, y1, y5, y9, y13, y0, y4, y8, y12, y3, y7, y11, y15]
+    [z3, z7, z11, z15] = quarterround [y3, y7, y11, y15, y2, y6, y10, y14, y1, y5, y9, y13, y0, y4, y8, y12]
+doubleround : [16][32] -> [16][32]
+doubleround y = columnround (rowround y)
+littleendian : [32][8] -> [32]
+littleendian x = join (reverse x)
+littleendian_state : [64][8] -> [16][32]
+littleendian_state x = [littleendian xi | xi <- split x]
+littleendian_state_inverse : [16][32] -> [64][8]
+littleendian_state_inverse x = join (map littleendian x)
+Salsa20_rounds : [32] -> [64][8] -> [64][8]
+Salsa20_rounds n x =
+  littleendian_state_inverse
+    (foldl (\state i -> state + (if i < n then [0x00000000, 0x00000001, 0x00000002, 0x00000003, 0x00000004, 0x00000005, 0x00000006, 0x00000007, 0x00000008, 0x00000009, 0x0000000a, 0x0000000b, 0x0000000c, 0x0000000d, 0x0000000e, 0x0000000f] else []) + doubleround state) (littleendian_state x) [0 .. 15])
+Salsa20 : [32] -> [64][8] -> [64][8]
+Salsa20 c x = Salsa20_rounds c x
+/* pragma Salsa20_passes_tests : property */
+Salsa20_passes_tests =
+  (Salsa20 0x0000000000000000
+    [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] ==
+    [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) /\
+  (Salsa20 0x0000000000000000
+    [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] ==
+    [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) /\
+  (Salsa20 0x0000000000000000
+    [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] ==
+    [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+```
+[GENERATE END]
+
+[ERROR] Cryptol load failed
+[RESULT] Task 84: HAS FAILURES
+

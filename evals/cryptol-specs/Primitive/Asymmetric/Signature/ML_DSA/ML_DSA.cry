@@ -1,0 +1,51 @@
+module Primitive::Asymmetric::Signature::ML_DSA::ML_DSA where
+
+import interface Primitive::Asymmetric::Signature::ML_DSA::Parameters as P
+import Primitive::Asymmetric::Signature::ML_DSA::OptimizedSpecification { interface P }
+
+KeyGen : Option ([32]Byte) -> Option (PublicKey, PrivateKey)
+KeyGen maybe_ξ = case maybe_ξ of
+    None -> None
+    Some ξ -> Some (KeyGen_internal ξ)
+
+Sign : {m, c} (fin m, fin c) =>
+    PrivateKey -> [m] -> [c]Byte -> Option ([32]Byte) -> Option (Signature)
+Sign sk M ctx maybe_rnd
+        | c > 255 => None
+        | c <= 255 => case maybe_rnd of
+        None -> None
+        Some rnd -> sigma where
+                                                            M' = join (IntegerToBytes`{1} 0 # IntegerToBytes`{1} `c # ctx) # M
+            // Step 11.
+            sigma = Some (Sign_internal sk M' rnd)
+
+Verify : {m, c} (fin m, fin c) =>
+    PublicKey -> [m] -> Signature -> [c]Byte -> Option Bool
+Verify pk M sigma ctx
+    | c > 255 => None
+    | c <= 255 => Some (Verify_internal pk M' sigma) where
+        // Step 10. We use `join` instead of `BytesToBits`, which produces
+        // the same byte string, but with the bits in each byte reversed.
+        // I think we have to do this to support the later call to `HBits`,
+        // which expects the bit-order and byte-order to be the same.
+        M' = join (IntegerToBytes`{1} 0 # IntegerToBytes`{1} `c # ctx) # M
+
+submodule TestAPI where
+    import Primitive::Asymmetric::Signature::ML_DSA::OptimizedSpecification { interface P } as Spec
+
+    KeyGen_internal = Spec::KeyGen_internal
+    Sign_internal = Spec::Sign_internal
+    Verify_internal = Spec::Verify_internal
+
+MLDSAIsCorrect : {m} (fin m) => [32]Byte -> [32]Byte -> [m] -> [255]Byte -> Bit
+property MLDSAIsCorrect ξ rnd M ctx = sigVerifies where
+    maybe_keys = KeyGen (Some ξ)
+    maybe_sigVerifies = case maybe_keys of
+        None -> None
+        Some keys -> case (Sign sk M ctx (Some rnd)) of
+                None -> None
+                Some sig -> Verify pk M sig ctx
+            where (pk, sk) = keys
+    sigVerifies = case maybe_sigVerifies of
+        None -> False
+        Some v -> v

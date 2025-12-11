@@ -1,0 +1,426 @@
+type Round = [16][32]
+type Block = [64][8]
+type Key = [32][8]
+type Nonce = [12][8]
+type Counter = [32]
+qround : [4][32] -> [4][32]
+qround [a0, b0, c0, d0] =
+  [a2, b4, c2, d4]
+  where
+    a1 = a0 + b0
+    d1 = d0 ^ a1
+    d2 = d1 <<< 16
+    c1 = c0 + d2
+    b1 = b0 ^ c1
+    b2 = b1 <<< 12
+    a2 = a1 + b2
+    d3 = d2 ^ a2
+    d4 = d3 <<< 8
+    c2 = c1 + d4
+    b3 = b2 ^ c2
+    b4 = b3 <<< 7
+cdround : Round -> Round
+cdround
+  [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14,
+   x15] =
+  [z0,
+  z1,
+  z2,
+  z3,
+  z4,
+  z5,
+  z6,
+  z7,
+  z8,
+  z9,
+  z10,
+  z11,
+  z12,
+  z13,
+  z14,
+  z15]
+  where
+    [y0, y4, y8, y12] = qround [x0, x4, x8, x12]
+    [y1, y5, y9, y13] = qround [x1, x5, x9, x13]
+    [y2, y6, y10, y14] = qround [x2, x6, x10, x14]
+    [y3, y7, y11, y15] = qround [x3, x7, x11, x15]
+    [z0, z5, z10, z15] = qround [y0, y5, y10, y15]
+    [z1, z6, z11, z12] = qround [y1, y6, y11, y12]
+    [z2, z7, z8, z13] = qround [y2, y7, y8, y13]
+    [z3, z4, z9, z14] = qround [y3, y4, y9, y14]
+core : Round -> Block
+core x =
+  block
+  where
+    rounds = iterate cdround x
+    result = rounds @ 10
+    block = blocked (x + result)
+kexp : Key -> Counter -> Nonce -> Round
+kexp k c n =
+  [c0,
+  c1,
+  c2,
+  c3,
+  c4,
+  c5,
+  c6,
+  c7,
+  c8,
+  c9,
+  c10,
+  c11,
+  c12,
+  c13,
+  c14,
+  c15]
+  where
+    [c0, c1, c2, c3] =
+      [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]
+    [c4, c5, c6, c7] =
+      map rjoin (groupBy`{4} kslice1 : [4][4][8]) : [4][32]
+    [c8, c9, c10, c11] =
+      map rjoin (groupBy`{4} kslice2 : [4][4][8]) : [4][32]
+    kslice1 = k @@ ([0 .. 15] : [16][32])
+    kslice2 = k @@ ([16 .. 31] : [16][32])
+    [c12] = [c]
+    [c13, c14, c15] = map rjoin (groupBy`{4} n)
+iround : [64] -> Round -> Round
+iround n r =
+  (iterate once r) @ n
+  where
+    once
+      [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14,
+       x15] =
+      [x0,
+      x1,
+      x2,
+      x3,
+      x4,
+      x5,
+      x6,
+      x7,
+      x8,
+      x9,
+      x10,
+      x11,
+      x12 + 1,
+      x13,
+      x14,
+      x15]
+stream : {n} (fin n) => Key -> Counter -> Nonce -> [n][8]
+stream k c n =
+  take`{n} (join rounds)
+  where
+    key = kexp k c n
+    rounds = [core (iround i key) | i <- [0, 1 ...]]
+encrypt : {n}
+  (fin n) =>
+    Key -> Counter -> Nonce -> [n][8] -> [n][8]
+encrypt k c n m = m ^ (stream k c n)
+rfctest03 =
+  encrypt key 42 (zero # [2]) msg == out
+  where
+    key =
+      [0x1c,
+      0x92,
+      0x40,
+      0xa5,
+      0xeb,
+      0x55,
+      0xd3,
+      0x8a,
+      0xf3,
+      0x33,
+      0x88,
+      0x86,
+      0x04,
+      0xf6,
+      0xb5,
+      0xf0,
+      0x47,
+      0x39,
+      0x17,
+      0xc1,
+      0x40,
+      0x2b,
+      0x80,
+      0x09,
+      0x9d,
+      0xca,
+      0x5c,
+      0xbc,
+      0x20,
+      0x70,
+      0x75,
+      0xc0]
+    out =
+      [0x27,
+      0x54,
+      0x77,
+      0x61,
+      0x73,
+      0x20,
+      0x62,
+      0x72,
+      0x69,
+      0x6c,
+      0x6c,
+      0x69,
+      0x67,
+      0x2c,
+      0x20,
+      0x61,
+      0x6e,
+      0x64,
+      0x20,
+      0x74,
+      0x68,
+      0x65,
+      0x20,
+      0x73,
+      0x6c,
+      0x69,
+      0x74,
+      0x68,
+      0x79,
+      0x20,
+      0x74,
+      0x6f,
+      0x76,
+      0x65,
+      0x73,
+      0x0a,
+      0x44,
+      0x69,
+      0x64,
+      0x20,
+      0x67,
+      0x79,
+      0x72,
+      0x65,
+      0x20,
+      0x61,
+      0x6e,
+      0x64,
+      0x20,
+      0x67,
+      0x69,
+      0x6d,
+      0x62,
+      0x6c,
+      0x65,
+      0x20,
+      0x69,
+      0x6e,
+      0x20,
+      0x74,
+      0x68,
+      0x65,
+      0x20,
+      0x77,
+      0x61,
+      0x62,
+      0x65,
+      0x3a,
+      0x0a,
+      0x41,
+      0x6c,
+      0x6c,
+      0x20,
+      0x6d,
+      0x69,
+      0x6d,
+      0x73,
+      0x79,
+      0x20,
+      0x77,
+      0x65,
+      0x72,
+      0x65,
+      0x20,
+      0x74,
+      0x68,
+      0x65,
+      0x20,
+      0x62,
+      0x6f,
+      0x72,
+      0x6f,
+      0x67,
+      0x6f,
+      0x76,
+      0x65,
+      0x73,
+      0x2c,
+      0x0a,
+      0x41,
+      0x6e,
+      0x64,
+      0x20,
+      0x74,
+      0x68,
+      0x65,
+      0x20,
+      0x6d,
+      0x6f,
+      0x6d,
+      0x65,
+      0x20,
+      0x72,
+      0x61,
+      0x74,
+      0x68,
+      0x73,
+      0x20,
+      0x6f,
+      0x75,
+      0x74,
+      0x67,
+      0x72,
+      0x61,
+      0x62,
+      0x65,
+      0x2e]
+    msg =
+      [0x62,
+      0xe6,
+      0x34,
+      0x7f,
+      0x95,
+      0xed,
+      0x87,
+      0xa4,
+      0x5f,
+      0xfa,
+      0xe7,
+      0x42,
+      0x6f,
+      0x27,
+      0xa1,
+      0xdf,
+      0x5f,
+      0xb6,
+      0x91,
+      0x10,
+      0x04,
+      0x4c,
+      0x0d,
+      0x73,
+      0x11,
+      0x8e,
+      0xff,
+      0xa9,
+      0x5b,
+      0x01,
+      0xe5,
+      0xcf,
+      0x16,
+      0x6d,
+      0x3d,
+      0xf2,
+      0xd7,
+      0x21,
+      0xca,
+      0xf9,
+      0xb2,
+      0x1e,
+      0x5f,
+      0xb1,
+      0x4c,
+      0x61,
+      0x68,
+      0x71,
+      0xfd,
+      0x84,
+      0xc5,
+      0x4f,
+      0x9d,
+      0x65,
+      0xb2,
+      0x83,
+      0x19,
+      0x6c,
+      0x7f,
+      0xe4,
+      0xf6,
+      0x05,
+      0x53,
+      0xeb,
+      0xf3,
+      0x9c,
+      0x64,
+      0x02,
+      0xc4,
+      0x22,
+      0x34,
+      0xe3,
+      0x2a,
+      0x35,
+      0x6b,
+      0x3e,
+      0x76,
+      0x43,
+      0x12,
+      0xa6,
+      0x1a,
+      0x55,
+      0x32,
+      0x05,
+      0x57,
+      0x16,
+      0xea,
+      0xd6,
+      0x96,
+      0x25,
+      0x68,
+      0xf8,
+      0x7d,
+      0x3f,
+      0x3f,
+      0x77,
+      0x04,
+      0xc6,
+      0xa8,
+      0xd1,
+      0xbc,
+      0xd1,
+      0xbf,
+      0x4d,
+      0x50,
+      0xd6,
+      0x15,
+      0x4b,
+      0x6d,
+      0xa7,
+      0x31,
+      0xb1,
+      0x87,
+      0xb5,
+      0x8d,
+      0xfd,
+      0x72,
+      0x8a,
+      0xfa,
+      0x36,
+      0x75,
+      0x7a,
+      0x79,
+      0x7a,
+      0xc1,
+      0x88,
+      0xd1]
+rjoin x = join (reverse x)
+rjoin : {a, b, c} (fin a, fin c) => [c][a]b -> [a * c]b
+iterate f x =
+  [x] # [f v | v <- iterate f x]
+  where
+    xs = [x] # [f v | v <- xs]
+iterate : {a} (a -> a) -> a -> [inf]a
+map f xs = [f x | x <- xs]
+map : {a, b, c} (a -> b) -> [c]a -> [c]b
+blocked x =
+  join (map toBytes x)
+  where
+    toBytes : [32] -> [4][8]
+    toBytes v = reverse (groupBy`{8} v)
+blocked : Round -> Block

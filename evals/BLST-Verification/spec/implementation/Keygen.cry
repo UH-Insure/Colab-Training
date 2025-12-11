@@ -1,0 +1,90 @@
+module implementation::Keygen where
+
+import Parameters as P
+import Primitive::Keyless::Hash::SHA256
+import Primitive::Symmetric::KDF::HKDF256
+import rfc8017
+
+import Common::bv
+
+import implementation::Types
+import implementation::Field
+
+pow256_abs: Pow256 -> [256]
+pow256_abs x = join (reverse x)
+
+r_modulus = toInteger P::r 
+r_R = 2^^256
+
+r_R_inv = toInteger 0x1bbe869330009d577204078a4f77266aab6fca8f09dc705f13f75b69fe75c040
+
+r_RR = 2^^512
+
+r_R_reduced = r_R % r_modulus
+r_RR_reduced = r_RR % r_modulus
+r_R_inv_reduced = r_R_inv % r_modulus
+
+r_to_mont x = (x*r_R) % r_modulus
+
+r_from_mont x = (x*r_R_inv) % r_modulus
+
+r_add_mont x y = (x+y) % r_modulus
+
+r_mul_mont x y = (x*y*r_R_inv) % r_modulus
+
+property keygen_finish_integer x = r_mul_mont (r_from_mont x) (2^^512 % r_modulus) == (x % r_modulus)
+
+bv_r = (fromInteger r_modulus):[256] bv_R = (fromInteger r_R_reduced):[256]
+bv_R_inv = (fromInteger r_R_inv):[256] bv_RR = (fromInteger r_RR_reduced):[256]
+
+mul_mont_r_bv: [256] -> [256] -> [256]
+mul_mont_r_bv a b = safe_mod (bv_r, safe_product (zext a, safe_product (b, bv_R_inv)))
+
+redc_r_bv: [512] -> [256]
+redc_r_bv x = safe_mod (bv_r, safe_product (x, zext bv_R_inv))
+
+property keygen_finish_bv x =
+  safe_mod (bv_r, x) == mul_mont_r_bv (redc_r_bv x) bv_RR
+
+mul_mont_256_rep: Vec256 -> Vec256 -> Vec256
+mul_mont_256_rep x y = vec256_rep (mul_mont_r_bv (vec256_abs x) (vec256_abs y))
+
+r_redc_rep: Vec512 -> Vec256
+r_redc_rep x = vec256_rep (redc_r_bv (vec512_abs x))
+
+r_RR_rep: Vec256 r_RR_rep = [14526898881837571181, 3129137299524312099, 419701826671360399, 524908885293268753]
+
+limbs_from_be_bytes_rep48: [48][8] -> [6]Limb
+limbs_from_be_bytes_rep48 bytes = reverse (split (join bytes))
+
+le_bytes_from_limbs_rep4: Vec256 -> Pow256
+le_bytes_from_limbs_rep4 limbs = reverse (split (join (reverse limbs)))
+
+property le_bytes_from_limbs_rep4_prop limbs =
+    pow256_abs (le_bytes_from_limbs_rep4 limbs) == vec256_abs limbs
+
+KeyGenStep_rep: {IKM_len, info_len} (validHMACSizes 20 (1+IKM_len)
+                                    , validHMACSizes 32 (35+info_len)
+                                    ) =>
+        [256] -> [IKM_len][8] -> [info_len][8] -> Vec256
+KeyGenStep_rep salt IKM key_info = SK where
+    type L = (3 * 256) /^ 16     PRK = HKDF_Extract (split salt) (IKM # [0])     OKM = HKDF_Expand`{L=L} PRK (key_info # I2OSP`{xLen=2} `L)
+    OKM_vec = (limbs_from_be_bytes_rep48 OKM) # [0,0]
+    SK = mul_mont_256_rep (r_redc_rep OKM_vec) r_RR_rep
+
+KeyGenLoop_rep: {IKM_len, info_len} (validHMACSizes 20 (1+IKM_len)
+                                    , validHMACSizes 32 (35+info_len)
+                                    ) =>
+        [256] -> [IKM_len][8] -> [info_len][8] -> [inf]Vec256
+KeyGenLoop_rep salt IKM info = keys where
+    salts = [salt] # [sha salt' | salt' <- salts]
+    keys = [zero] #
+                      [if k == zero then key_gen_step salt' else k | k <- keys | salt' <- salts]
+    key_gen_step s = KeyGenStep_rep s IKM info
+
+KeyGen_rep: {IKM_len, info_len} ( validHMACSizes 20 (1+IKM_len)
+                                , validHMACSizes 32 (35+info_len)
+                                ) =>
+        ([IKM_len][8], [info_len][8]) -> Pow256
+KeyGen_rep (IKM, key_info) = le_bytes_from_limbs_rep4 SK_vec where
+    SK_vec = (KeyGenLoop_rep (sha (join "BLS-SIG-KEYGEN-SALT-")) IKM key_info) @ 4

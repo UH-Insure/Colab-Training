@@ -1,0 +1,15 @@
+import Parameters as P
+import Frobenius
+import FieldExtras
+
+p: [381]
+p = `P::p
+
+property fp2_frobenius_prop x =
+  fp2_frobenius x' == F_expt P::Fp_2 x' p where x' = P::Fp_2.normalize x
+
+property f6_frobenius_prop x =
+  fp6_frobenius x' == F_expt P::Fp_6 x' p where x' = P::Fp_6.normalize x
+
+property f12_frobenius_prop x =
+  fp12_frobenius x' == F_expt P::Fp_12 x' p where x' = P::Fp_12.normalize x

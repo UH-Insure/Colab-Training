@@ -1,0 +1,39 @@
+type GF28 = [8]
+type Nb = 4
+type State = [4][Nb * 8]
+gf28Mult : GF28 -> GF28 -> GF28
+gf28Mult x y = pmod (pmult x y) <| x^^8 + x^^4 + x^^3 + x + 1 |>
+toBytes : [32] -> [4]GF28
+toBytes x = split`{4} x
+fromBytes : [4]GF28 -> [32]
+fromBytes xs = join xs
+mETable = [gf28Mult 0x0e i | i <- [0 .. 255]]
+mBTable = [gf28Mult 0x0b i | i <- [0 .. 255]]
+mDTable = [gf28Mult 0x0d i | i <- [0 .. 255]]
+m9Table = [gf28Mult 0x09 i | i <- [0 .. 255]]
+mE i = mETable @ i
+mB i = mBTable @ i
+mD i = mDTable @ i
+m9 i = m9Table @ i
+tables =
+  [[mE, mB, mD, m9],
+  [m9, mE, mB, mD],
+  [mD, m9, mE, mB],
+  [mB, mD, m9, mE]]
+invMixColumns : State -> State
+invMixColumns state =
+  [fromBytes ce | ce <- transpose
+                 (mmult [toBytes se | se <- state])]
+  where
+    dollar f x = f x
+    dot f fs = foldr1 (^) (zipWith dollar f fs)
+    mmult n = [[(dot r) ne | ne <- n] | r <- tables]
+foldr : {a, b, n} (fin n) => (a -> b -> b) -> b -> [n]a -> b
+foldr f acc xs =
+  ys ! 0
+  where
+    ys = [acc] # [f x a | a <- ys | x <- reverse xs]
+foldr1 : {a, b} (fin b) => (a -> a -> a) -> [1 + b]a -> a
+foldr1 f xs = foldr f (xs @ 0) (tail xs)
+zipWith : {a, b, c, n} (a -> b -> c) -> [n]a -> [n]b -> [n]c
+zipWith f xs ys = [f x y | x <- xs | y <- ys]

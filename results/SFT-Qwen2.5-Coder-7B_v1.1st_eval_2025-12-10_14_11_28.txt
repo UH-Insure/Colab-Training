@@ -1,0 +1,2806 @@
+j05hr3d/SFT-Qwen2.5-Coder-7B_v1.1st Eval Suite Results
+Started at 2025-12-10_14:11:28 Ended at 2025-12-10_14:22:07
+Processed 51 tasks.
+
+=== FINAL SCORE: N/A (no executed tasks) ===
+
+
+=== Task 1 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification for the McEliece KEM low-level Operations module, defining the functions crypto_kem_enc and crypto_kem_dec (and their helper hash functions) with appropriate types and ensuring they match the intended McEliece KEM encryption and decryption behavior.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Asymmetric::KEM::McEliece::Operations where
+
+import Common::utils
+import Primitive::Symmetric::Hash::SHA256
+import Primitive::Asymmetric::KEM::McEliece::Types
+
+crypto_kem_enc : (Ct, Ss)
+crypto_kem_enc =
+  let ct = hash (join (fromInteger (toInteger (pvt ! 0)))) 0x01
+      ss = hash (join (fromInteger (toInteger (pvt ! 0)))) 0x02
+  in (ct, ss)
+
+crypto_kem_dec : (Ss -> Ct -> Bool) -> Ct -> [32] -> Ct -> Bool
+crypto_kem_dec check_ct ss ct seed =
+  if (check_ct ss ct) then True else False
+```
+[GENERATED END]
+
+
+=== Task 2 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Specify the Cryptol types and full implementations for load2, bitrev, store8, load8, and transpose_64x64 used in a McEliece KEM utility module, matching the shown bitwise behavior and using the imported Types definitions.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module McElieceKEM::Util where
+
+import Types
+
+load2 : [16][8] -> [2][16]
+load2 msg = [ (msg@i) # (msg@(i+1)) | i <- [0,2...14] ]
+
+bitrev : [8] -> [8]
+bitrev x = zext (join [ x!i | i <- reverse [0..7]])
+
+store8 : [2][16] -> [16][8]
+store8 x = [ ((x@0)>>i) # ((x@1)>>i) | i <- [0,8...15] ]
+
+load8 : [16][8] -> [2][16]
+load8 x = [ ((x@0)>>i) # ((x@1)>>i) | i <- [0,8...15] ]
+
+transpose_64x64 : [64][64]a -> [64][64]a
+transpose_64x64 x =
+    [[x@(i+j*64) | i <- [0...63]] | j <- [0...63]]
+```
+[GENERATED END]
+
+
+=== Task 3 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module that defines the same ECDSA test properties for NIST curves P-192, P-224, P-256, P-384, and P-521, including point decompression, point addition/subtraction, doubling, scalar and joint scalar multiplication, and mp_mod_sqrt correctness, matching the constants and structure shown.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Tests::ECDSA::ECDSA where
+
+import Common::utils
+import ShortWeierstrassCurve
+import PrimeField
+import FieldExtras
+import ModDivZ
+import ModDivZExtra
+import MontgomeryForm
+import MPModSqrt
+
+import Parameters::EC::PrimeField::Instantiations::P192
+import Parameters::EC::PrimeField::Instantiations::P224
+import Parameters::EC::PrimeField::Instantiations::P256
+import Parameters::EC::PrimeField::Instantiations::P384
+import Parameters::EC::PrimeField::Instantiations::P521
+
+import Parameters::EC::PrimeField::Instantiations::P192 as P192 where
+  type t = P192
+
+import Parameters::EC::PrimeField::Instantiations::P224 as P224 where
+  type t = P224
+
+import Parameters::EC::PrimeField::Instantiations::P256 as P256 where
+  type t = P256
+
+import Parameters::EC::PrimeField::Instantiations::P384 as P384 where
+  type t = P384
+
+import Parameters::EC::PrimeField::Instantiations::P521 as P521 where
+  type t = P521
+
+property pointDecompressionWorks curve d = curve.point_eq (curve.decompress_point d) (x,y)
+    where
+        x = curve.base_field.fromInteger (0xb97c3d3a7c6f78732e55f9030353e97154406555b24722e1367807496c4cc672)
+        y = curve.base_field.fromInteger (0x104977875901415711e1369763d5245878f7f5108c454133954526a467771ea1)
+        d = x # True
+
+property pointAdditionWorks curve x1 y1 x2 y2 x3 y3 = curve.point_eq (curve.add (x1,y1) (x2,y2)) (x3,y3)
+
+property pointSubtractionWorks curve x1 y1 x2 y2 x3 y3 = curve.point_eq (curve.sub (x1,y1) (x2,y2)) (x3,y3)
+
+property pointDoublingWorks curve x1 y1 x2 y2 = curve.point_eq (curve.dbl (x1,y1)) (x2,y2)
+
+property scalarMultiplicationWorks curve k x1 y1 x2 y2 = curve.point_eq (curve.mul k (x1,y1)) (x2,y2)
+
+property jointScalarMultiplicationWorks curve k1 x1 y1 k2 x2 y2 x3 y3 = curve.point_eq (curve.mul k1 (x1,y1)) (x2,y2) ==> curve.point_eq (curve.mul k2 (x2,y2)) (x3,y3) ==> curve.point_eq (curve.mul k1 (x1,y1)) (x3,y3)
+
+property mpModSqrtCorrect curve n h x = curve.field.isSquare h ==> curve.field.isSquare x ==> curve.field.isSquare x' ==> curve.field.sq x' == x ==> curve.field.sq h' == h ==> h' == h ==> x' == x
+    where
+        (h', x') = mp_mod_sqrt curve n h x
+```
+[GENERATED END]
+
+
+=== Task 4 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol module implementing the HMAC construction with a SHA-256-based instance `hmacSHA256`, including the helper function `kinit` and the generic `hmac` function with the given polymorphic sizes and type constraints.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module HMAC where
+
+import SHA256
+
+type constraint ValidKey k = 128 >= width k
+
+kinit : {k, n} ValidKey k => [k] -> [64][8]
+kinit key = split (if `k > 64 then SHA256 key else pad key)
+
+hmac : {k, n, m}
+      (ValidKey k, 64 >= n, 64 >= m) =>
+       [k] -> [n][8] -> [m][8] -> [64][8]
+hmac key nonce msg = split (SHA256 (k0 # msg'))
+  where
+    k0 = join (kinit key)
+    msg' = split (SHA256 (k1 # nonce))
+    k1 = join (kinit key)
+
+pad : {n} (fin n, n < 64 * 8) => [n] -> [64][8]
+pad m = split (m # zero # (`n : [64]))
+
+hmacSHA256 : {k, n, m}
+           (ValidKey k, 64 >= n, 64 >= m) =>
+            [k] -> [n][8] -> [m][8] -> [64][8]
+hmacSHA256 = hmac
+```
+[GENERATED END]
+
+
+=== Task 5 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the Cryptol module `Primitive::Symmetric::Cipher::Block::AES::SubByteSBox` implementing the AES SubBytes and InvSubBytes transformations with functions `SubByte : GF28 -> GF28` and `InvSubByte : GF28 -> GF28`, using `sbox` and `sboxInv` over `GF28` elements.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+module Primitive::Symmetric::Cipher::Block::AES::SubByteSBox where
+
+import Primitive::Symmetric::Cipher::Block::AES::GF28
+
+type SBox = [256]GF28
+
+SubByte : GF28 -> GF28
+SubByte x = sbox @ x
+
+InvSubByte : GF28 -> GF28
+InvSubByte x = sboxInv @ x
+
+sbox : SBox
+sbox =
+  [0x63,
+  0x7c,
+  0x77,
+  0x7b,
+  0xf2,
+  0x6b,
+  0x6f,
+  0xc5,
+  0x30,
+  0x01,
+  0x67,
+  0x2b,
+  0xfe,
+  0xd7,
+  0xab,
+  0x76,
+  0xca,
+  0x82,
+  0xc9,
+  0x7d,
+  0xfa,
+  0x59,
+  0x47,
+  0xf0,
+  0xad,
+  0xd4,
+  0xa2,
+  0xaf,
+  0x9c,
+  0xa4,
+  0x72,
+  0xc0,
+  0xb7,
+  0xfd,
+  0x93,
+  0x26,
+  0x36,
+  0x3f,
+  0xf7,
+  0xcc,
+  0x34,
+  0xa5,
+  0xe5,
+  0xf1,
+  0x71,
+  0xd8,
+  0x31,
+  0x15,
+  0x04,
+  0xc7,
+  0x23,
+  0xc3,
+  0x18,
+  0x96,
+  0x05,
+  0x9a,
+  0x07,
+  0x12,
+  0x80,
+  0xe2,
+  0xeb,
+  0x27,
+  0xb2,
+  0x75,
+  0x09,
+  0x83,
+  0x2c,
+  0x1a,
+  0x1b,
+  0x6e,
+  0x5a,
+  0xa0,
+  0x52,
+  0x3b,
+  0xd6,
+  0xb3,
+  0x29,
+  0xe3,
+  0x2f,
+  0x84,
+  0x53,
+  0xd1,
+  0x00,
+  0xed,
+  0x20,
+  0xfc,
+  0xb1,
+  0x5b,
+  0x6a,
+  0xcb,
+  0xbe,
+  0x39,
+  0x4a,
+  0x4c,
+  0x58,
+  0xcf,
+  0xd0,
+  0xef,
+  0xaa,
+  0xfb,
+  0x43,
+  0x4d,
+  0x33,
+  0x85,
+  0x45,
+  0xf9,
+  0x02,
+  0x7f,
+  0x50,
+  0x3c,
+  0x9f,
+  0xa8,
+  0x51,
+  0xa3,
+  0x40,
+  0x8f,
+  0x92,
+  0x9d,
+  0x38,
+  0xf5,
+  0xbc,
+  0xb6,
+  0xda,
+  0x21,
+  0x10,
+  0xff,
+  0xf3,
+  0xd2,
+  0xcd,
+  0x0c,
+  0x13,
+  0xec,
+  0x5f,
+  0x97,
+  0x44,
+  0x17,
+  0xc4,
+  0xa7,
+  0x7e,
+  0x3d,
+  0x64,
+  0x5d,
+  0x19
+```
+[GENERATED END]
+
+
+=== Task 6 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module that defines properties `fp2_frobenius_prop`, `f6_frobenius_prop`, and `f12_frobenius_prop` asserting that `fp2_frobenius`, `fp6_frobenius`, and `fp12_frobenius` equal `F_expt` over `P::Fp_2`, `P::Fp_6`, and `P::Fp_12` (after normalization) using the prime `p : [381] = P::p`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+import Parameters as P
+import Frobenius
+
+property fp2_frobenius_prop x =
+  fp2_normalize(fp2_frobenius x) == F_expt x
+
+property f6_frobenius_prop x =
+  fp6_normalize(fp6_frobenius x) == F_expt x
+
+property f12_frobenius_prop x =
+  fp12_normalize(fp12_frobenius x) == F_expt x
+
+p : [381]
+p = P::p
+```
+[GENERATED END]
+
+
+=== Task 7 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the function `core_verify_pk_in_g1` that verifies a BLS signature in G1 by comparing two `bls_ate_pairing` results (one using the public key and `hash_to_curve_opt(msg, dst)`, and the other using the base point `BP` and the signature), returning an `Fp_12.is_equal` boolean.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Core::BLS::G1::Verify where
+
+import Common::FieldExtras
+import Common::ModDivPow
+import Common::Pairing
+import Common::ShortWeierstrassCurve as EC
+import Core::BLS::HashToG2
+import Core::BLS::Parameters
+import Core::BLS::Serialize
+import Core::BLS::Signature
+
+core_verify_pk_in_g1 : {msg_len,dst_len} (fin msg_len, fin dst_len)
+  => BlsPubKey -> [msg_len][8] -> [dst_len][8] -> BlsSig -> Bit
+core_verify_pk_in_g1 pk msg dst sig = Fp_12.is_equal g g'
+    where
+        g = bls_ate_pairing pk' h
+        g' = bls_ate_pairing BP sig
+        h = hash_to_curve_opt (msg,dst)
+        pk' = deserialize_pk pk
+```
+[GENERATED END]
+
+
+=== Task 8 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol module `Pairing` that specifies the BLS optimal ate pairing over the BN curve, including `bls_ate_pairing`, `ate_pairing`, the Miller loop (`miller_step`, `line_function`), and the final exponentiation using Frobenius maps, with appropriate types and intermediate helpers.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+module Pairing where
+
+import Parameters
+import ShortWeierstrassCurve as EC
+import Frobenius
+import FieldExtras
+
+type P = EC::AffinePoint t_Fp_12
+type F = t_Fp_12
+type E = EC::EllipticCurve t_Fp_12
+
+type F2 = t_Fp_2
+type E2 = EC::EllipticCurve t_Fp_2
+
+F0 = 0x01 : t_Fp
+F1 = 0x02 : t_Fp
+F2 = 0x03 : t_Fp
+F4 = 0x04 : t_Fp
+F8 = 0x08 : t_Fp
+F9 = 0x09 : t_Fp
+
+G1 = { x = x_G, y = y_G }
+
+G2 = { x = x_H, y = y_H }
+
+E1 = { base_point = G1, base_field = Fp, base_field' = Fp_12, base_field'' = Fp_6, prime = p, extension = [F1, F0, F0], extension' = [F4, F2, F1], extension'' = [F2, F8, F9] }
+E2 = { base_point = G2, base_field = Fp, base_field' = Fp_2, base_field'' = Fp_1, prime = p, extension = [F0, F1], extension' = [F2, F1], extension'' = [F1] }
+
+// The affine point on E2 used in the miller step
+R = { x = x_R, y = y_R }
+
+// The affine point on E1 used in the miller step
+S = { x = x_S, y = y_S }
+
+// The affine point on E2 used in the final exponentiation
+T = { x = x_T, y = y_T }
+
+// The affine point on E1 used in the final exponentiation
+U = { x = x_U, y = y_U }
+
+// The affine point on E2 used in the final exponentiation
+V = { x = x_V, y = y_V }
+
+// The affine point on E1 used in the final exponentiation
+W = { x = x_W, y = y_W }
+
+// The affine point on E2 used in the final exponentiation
+X = { x = x_X, y = y_X }
+
+// The affine point on E1 used in the final exponentiation
+Y = { x = x_Y, y = y_Y }
+
+// The affine point on E2 used in the final exponentiation
+Z = { x = x_Z, y = y_Z }
+
+// The affine point on E1 used in the final exponentiation
+AA = { x = x_AA, y = y_AA }
+
+// The affine point on E2 used in the final exponentiation
+BB = { x = x_BB, y = y_BB }
+
+// The affine point on E1 used in the final exponentiation
+CC = { x = x_CC, y = y_CC }
+
+// The affine point on E2 used in the final exponentiation
+DD = { x = x_DD, y = y_DD }
+
+// The affine point on E1 used in the final exponentiation
+EE = { x = x_EE, y = y_EE }
+
+// The affine point on E2 used in the final exponentiation
+FF = { x = x_FF, y = y_FF }
+
+// The affine point on E1 used in the final exponentiation
+GG = { x = x_GG, y = y_GG }
+
+// The affine point on E2 used in the final exponentiation
+HH = { x = x_HH, y = y_HH }
+
+// The affine point on E1 used in the final exponentiation
+II = { x = x_II, y = y_II }
+
+// The affine point on E2 used in the final exponentiation
+JJ = { x = x_JJ, y = y_JJ }
+
+// The affine point on E1 used in the final exponentiation
+KK = { x = x_KK, y = y_KK }
+
+// The affine point on E2 used in the final exponentiation
+LL = { x = x_LL, y = y_LL }
+
+// The affine point on E1 used in the final exponentiation
+MM = { x = x_MM, y = y_MM }
+
+// The affine point on E2 used in the final exponentiation
+NN = { x = x_NN, y = y_NN }
+
+// The affine point on E1 used in the final exponentiation
+OO = { x = x_OO, y = y_OO }
+
+// The affine point on E2 used in the final exponentiation
+```
+[GENERATED END]
+
+
+=== Task 9 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Specify and verify in Cryptol the BLS key generation procedure `KeyGen_rep` using HKDF-SHA256 and Montgomery arithmetic, including the properties `keygen_finish_integer`, `keygen_finish_bv`, and `le_bytes_from_limbs_rep4_prop` over the defined 256/512-bit representations.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+import HashToCurveE2
+import Parameters
+import Pairing
+import ShortWeierstrassCurve
+import ShortWeierstrassCurveAffine as Affine
+import ShortWeierstrassCurveProjective as Projective
+import rfc8017
+import SSWUToBLS
+import ShortWeierstrassCurveMontgomery
+
+type Q = P
+
+type h = 256
+
+type k = 512
+
+type t = 384
+
+type n = 32
+
+type m = 48
+
+type m' = 96
+
+type d = 256
+
+type e = 64
+
+type c = 128
+
+type s = 256
+
+type t' = 64
+
+type f = 32
+
+type g = 64
+
+type l = 32
+
+type p = 578960446186580977114370715428242081345217652801225987234784660515037037519587885536100235016059344703858501454114500492403170889489192
+
+type r = 115792089210356248762697446949407573529996955224135760342422259061068512044369005795785180169860411361876074778683666656553027
+
+type F = Field r
+
+type E = EllipticCurve r
+
+type E' = MontgomeryCurve r
+
+type P = E'.Point
+
+type G = E'.Point
+
+type Q = E'.Point
+
+type T = [t]Bit
+
+type T' = [t']Bit
+
+type S = [s]Bit
+
+type M = [m]Bit
+
+type M' = [m']Bit
+
+type D = [d]Bit
+
+type E' = [e]Bit
+
+type C = [c]Bit
+
+type L = [l]Bit
+
+type F' = [f]Bit
+
+type G' = [g]Bit
+
+type S' = [s']Bit
+
+type R = [r]Bit
+
+type H = [h]Bit
+
+type K = [k]Bit
+
+type I = [i]Bit
+
+type J = [j]Bit
+
+type L' = [l']Bit
+
+type M'' = [m'']Bit
+
+type i = 128
+
+type j = 128
+
+type l' = 32
+
+type m'' = 96
+
+type n' = 32
+
+type o = 32
+
+type p' = 578960446186580977114370715428242081345217652801225987234784660515037037519587885536100235016059344703858501454114500492403170889489192
+
+type r' = 115792089210356248762697446949407573529996955224135760342422259061068512044369005795785180169860411361876074778683666656553027
+
+type F' = Field r'
+
+type E' = EllipticCurve r'
+
+type E'' = MontgomeryCurve r'
+
+type P' = E''.Point
+
+type G' = E''.
+```
+[GENERATED END]
+
+
+=== Task 10 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module `Names` that defines the given parameters, types, functions, primitive declarations, and the property `enc_correct : [64] -> Bit` asserting `x == enc (enc x)` for all 64-bit inputs, matching the structure implied by the excerpt.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+module Names where
+
+parameter
+
+  type n : #
+  type m : #
+  type k : #
+
+  type constraint (fin n, fin m, fin k)
+
+  type m' = m + k
+  type n' = n + m'
+
+  x : [n]
+  y : [m]
+
+  z : [k]
+
+  type n'' = n + k
+  type m'' = m + k
+
+  x' : [n']
+  y' : [m']
+
+  z' : [k]
+
+  type n''' = n + k
+  type m''' = m + k
+
+  x'' : [n'']
+  y'' : [m'']
+
+  z'' : [k]
+
+  type n'''' = n + k
+  type m'''' = m + k
+
+  x''' : [n'''']
+  y''' : [m'''']
+
+  z''' : [k]
+
+  type n''''' = n + k
+  type m''''' = m + k
+
+  x'''' : [n'''''']
+  y'''' : [m'''''']
+
+  z'''' : [k]
+
+  type n'''''' = n + k
+  type m'''''' = m + k
+
+  x''''' : [n'''''''
+  y''''' : [m'''''''
+
+  z''''' : [k]
+
+  type n''''''' = n + k
+  type m''''''' = m + k
+
+  x'''''' : [n''''''']
+  y'''''' : [m''''''']
+
+  z'''''' : [k]
+
+  type n'''''''' = n + k
+  type m'''''''' = m + k
+
+  x''''''' : [n'''''''']
+  y''''''' : [m'''''''']
+
+  z''''''' : [k]
+
+  type n''''''''' = n + k
+  type m''''''''' = m + k
+
+  x'''''''' : [n'''''''''
+  y'''''''' : [m'''''''''']
+
+  z'''''''' : [k]
+
+  type n'''''''''' = n + k
+  type m'''''''''' = m + k
+
+  x''''''''' : [n'''''''''']
+  y''''''''' : [m'''''''''']
+
+  z''''''''' : [k]
+
+  type n''''''''''' = n + k
+  type m''''''''''' = m + k
+
+  x'''''''''' : [n'''''''''''
+  y'''''''''' : [m'''''''''''']
+
+  z'''''''''' : [k]
+
+  type n'''''''''''' = n + k
+  type m'''''''''''' = m + k
+
+  x''''''''''' : [n'''''''''''']
+  y''''''''''' : [m'''''''''''']
+
+  z''''''''''' : [k]
+
+  type n''''''''''''' = n + k
+  type m''''''''''''' = m + k
+
+  x'''''''''''' : [n'''''''''''''
+  y'''''''''''' : [m'''''''''''''']
+
+  z'''''''''''' : [k]
+
+  type n'''''''''''''' = n + k
+  type m'''''''''''''' = m + k
+
+  x''''''''''''' : [n'''''''''''''']
+  y''''''''''''' : [m'''''''''''''']
+
+  z''''''''''''' : [k]
+
+  type n''''''''''''''' = n + k
+  type m''''''''''''''' = m + k
+
+  x'''''''''''''' : [n'''''''''''''''
+  y'''''''''''''' : [m'''''''''''''''']
+
+  z'''''''''''''' : [k]
+
+  type n'''''''''''''''' = n + k
+  type m'''''''''''''''' = m + k
+
+  x''''''''''''''' : [n'''''''''''''''']
+  y''''''''''''''' : [m'''''''''''''''']
+
+  z''''''''''''''' : [k]
+
+  type n''''''''''''''''' = n + k
+  type m''''''''''''''''' = m + k
+```
+[GENERATED END]
+
+
+=== Task 11 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: In Cryptol, define bitvector update functions `update` and `updateEnd` on 16-bit words and properties `wordUpdate`, `wordUpdate2`, `wordUpdateEnd`, and `wordUpdateEnd2` that verify these functions match both mask-based and index-based formulations for indices `y < 16`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+update : [16] -> [4] -> [4] -> [16]
+update w y v = (w && ~mask) || (zero # v # mask)
+  where
+    mask = zero # ((1 << y) - 1)
+
+updateEnd : [16] -> [4] -> [4] -> [16]
+updateEnd w y v = (w && ~mask) || (v # zero # mask)
+  where
+    mask = zero # ((1 << (16 - y)) - 1)
+
+property wordUpdate y v =
+  update (0x1234 + y) y v == (0x1234 + y + v * (1 << y))
+property wordUpdate2 y v =
+  update (0x5678 + y) y v == (0x5678 + y + v * (1 << y))
+
+property wordUpdateEnd y v =
+  updateEnd (0x1234 + y) y v == (0x1234 + y + v * (1 << (16 - y)))
+property wordUpdateEnd2 y v =
+  updateEnd (0x5678 + y) y v == (0x5678 + y + v * (1 << (16 - y)))
+```
+[GENERATED END]
+
+
+=== Task 12 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the function `xor : {a} ([a], [a]) -> [a]` as element-wise inequality on two sequences, and define `check24` as a property asserting that for all 4-bit `x` and `y`, `xor` equals the built-in bitwise XOR `(^)` and that this holds for all values.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+xor : {a} ([a], [a]) -> [a]
+xor (x, y) = [ xi != yi | xi <- x | yi <- y ]
+
+check24 = all (\x -> all (\y -> xor (x, y) == x ^ y)) tests where
+  tests = [ (x, y) | x <- xs | y <- ys ]
+  xs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+  ys = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+```
+[GENERATED END]
+
+
+=== Task 13 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: In Cryptol, define the sequence `xs` as given and the value `check28` that asserts the list comprehension `[ x == y | (x,y) <- xs ]` is equal to `~zero`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+import Float
+
+xs = [ 1.0 + i : Float64 | i <- [ 0 .. 10 ] ]
+
+check28 = ~zero == [ x == y | (x,y) <- xs ]
+```
+[GENERATED END]
+
+
+=== Task 14 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: In Cryptol, reproduce these parameterized sequence type declarations and their constant zero definitions, ensuring that the arithmetic in the sequence length expressions is well-typed and equivalent (e.g., for f/g, ff/gg, jj/kk).
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type f n = [n + 1][8]
+zero : {n} (fin n) => f n
+zero = replicate 0
+
+type ff n = [2 * n][8]
+zero : {n} (fin n) => ff n
+zero = replicate 0
+
+type gg n = [n][8]
+zero : {n} (fin n) => gg n
+zero = replicate 0
+
+type jj n = [n + 2][8]
+zero : {n} (fin n) => jj n
+zero = replicate 0
+
+type kk n = [2 * (n + 1)][8]
+zero : {n} (fin n) => kk n
+zero = replicate 0
+```
+[GENERATED END]
+
+
+=== Task 15 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines the submodules A, S, F, I, and M as given, using a type alias T = [8], an interface submodule S exposing x : T, a functor submodule F using x to define y = 2 * x, and an instantiation M = F { I } with I.x = 28.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+submodule A where
+  type T = [8]
+
+submodule S where
+  import submodule A
+
+  x : T
+  x = 15
+
+submodule F where
+  import submodule S
+
+  y : T
+  y = 2 * x
+
+submodule I where
+  x : T
+  x = 28
+
+submodule M = submodule F { submodule I }
+```
+[GENERATED END]
+
+
+=== Task 16 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Specify the ML-DSA key generation, signing, and verification API and define the property MLDSAIsCorrect that states a signature produced by Sign with keys from KeyGen always verifies with Verify for all messages and contexts within the given type constraints.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Spec where
+
+import Parameters
+import Primitive::Signature::MLDSA
+
+KeyGen : {n} (fin n, n >= 1) => [n] -> ([32], [32])
+KeyGen random = (r, s)
+    where (r,s) = keyGen (split random)
+
+Sign : {m,n} (fin m, fin n, m >= 1, n >= 1) => ([32], [32]) -> [m][8] -> [32] -> [32]
+Sign (r,s) msg context = sign r s (join msg) context
+
+Verify : {m,n} (fin m, fin n, m >= 1, n >= 1) => ([32], [32]) -> [m][8] -> [32] -> Bit
+Verify (r,s) msg context = verify r s (join msg) context
+
+property MLDSAIsCorrect random msg context = Verify (KeyGen random) msg context
+```
+[GENERATED END]
+
+
+=== Task 17 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module that fully specifies the XMSS parameter interface `Primitive::Asymmetric::Signature::XMSS::Parameters`, including types `h`, `n`, `MessageUpperBound`, `PaddingWidth`, constants `oid`, and hash functions `H` and `H_msg` with the given constraints and signatures.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Asymmetric::Signature::XMSS::Parameters where
+
+import Common::Hash
+
+parameter
+
+  type h : #
+  type constraint (fin h, h >= 1)
+
+  type n : #
+  type constraint (fin n, width n <= 8)
+
+  type MessageUpperBound : #
+
+  type PaddingWidth : #
+
+  oid : [43][8]
+
+  H : {a} (ValidMessage a) => [n] -> [a] -> [2 * n]
+  H_msg : {a} (ValidMessage a) => [n] -> [a] -> [2 * n]
+```
+[GENERATED END]
+
+
+=== Task 18 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module `Primitive::Asymmetric::Signature::XMSS::Instantiations::XMSS_SHA2_10_256` that instantiates the generic XMSS specification with the `XMSS_SHA2_10_256_Parameters` parameter set and the `WOTSP_SHA2_256` WOTS instantiation.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Asymmetric::Signature::XMSS::Instantiations::XMSS_SHA2_10_256 =
+    Primitive::Asymmetric::Signature::XMSS::Specification {
+        Parameters = Primitive::Asymmetric::Signature::XMSS::ParameterSets::XMSS_SHA2_10_256,
+        WOTS = Primitive::Asymmetric::Signature::WOTS::Instantiations::WOTSP_SHA2_256
+    }
+```
+[GENERATED END]
+
+
+=== Task 19 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Specify the Keccak/SHA3 bit and byte ordering utilities, including toBytes, fromBytes, reverseBitOrdering, h2b, b2h, and properties proving involution and mutual inversion (e.g., h2bAndb2hInvert, b2hAndh2bInvert, and example properties).
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Keyless::Hash::Keccak::Util where
+
+import Array
+
+type BitOrdering = [25][16][8][8]
+
+reverseBitOrdering : BitOrdering -> BitOrdering
+reverseBitOrdering bits = [reverse b | b <- bits ]
+
+h2b : {n} (fin n) => [n] -> BitOrdering
+h2b h = groupBy`{8} (groupBy`{16} (reverse (h # zero)))
+
+b2h : BitOrdering -> [480]
+b2h b = join (reverse (join (groupBy`{16} (reverse b))))
+
+property h2bAndb2hInvert h = b2h (h2b h) == h # zero
+
+property b2hAndh2bInvert b = b2h (h2b b) == b
+
+example : BitOrdering
+example = h2b (zero#take`{480} (join (repeat "abc")))
+
+type ByteOrdering = [25][16][4][8]
+
+reverseByteOrdering : ByteOrdering -> ByteOrdering
+reverseByteOrdering bytes = [reverse b | b <- bytes ]
+
+toBytes : {n} (fin n) => [n] -> ByteOrdering
+toBytes bits = groupBy`{4} (groupBy`{16} (reverse (bits # zero)))
+
+fromBytes : ByteOrdering -> [480]
+fromBytes b = join (reverse (join (groupBy`{16} (reverse b))))
+
+property toBytesAndFromBytesInvert b = fromBytes (toBytes b) == b # zero
+
+property fromBytesAndToBytesInvert b = fromBytes (toBytes b) == b
+```
+[GENERATED END]
+
+
+=== Task 20 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write Cryptol properties that verify a SHA224::hash function against known test vectors for inputs "abc", the empty string, the 448-bit alphabet string, and the 896-bit alphabet string, matching the specified SHA-224 digest outputs.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Keyless::Hash::SHA2::Tests::SHA224 where
+
+import Primitive::Keyless::Hash::SHA2::Instantiations::SHA224 as SHA224
+
+property testsPass = all tests
+
+tests : [4](Bit,[32][8],[16][32])
+tests =
+  [ ("abc", expected0, SHA224::hash `32 "abc")
+  , (zero, expected1, SHA224::hash `32 zero)
+  , (alphabet, expected2, SHA224::hash `32 alphabet)
+  , (bigAlphabet, expected3, SHA224::hash `32 bigAlphabet)
+  ]
+
+alphabet = join [c | c <- "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"]
+
+expected0 = [
+    0x23801d0ffd25fe46, 0x779fc624d37fe8db, 0x8ce4e980ecb73f9f
+  , 0x555fed636a2a16a2, 0x20309871d24c3c56, 0x083d9e710f2a84c9
+  , 0x65dfc35c9fffaa4a
+  ]
+
+expected1 = [
+    0xd14a028c2a3a2bc9, 0x47610423d533081f, 0x692a2d2b0b60a76e
+  , 0x3553b5a53c63ec37, 0xb3cd5cac6777c826, 0x8cf10aeda4103d41
+  , 0xd0d9d1621eeae7f6
+  ]
+
+expected2 = [
+    0xf7bc9528a0b070fb, 0xca630b3951242f7f, 0x64a90f76c3401784
+  , 0x5482245c548b9d83, 0x816506049f23857a, 0xc73365a7a0240275
+  , 0x4f74007d919e4842
+  ]
+
+expected3 = [
+    0x1629ff616003f109, 0x2b8aff4df489af8b, 0xfdd44289a8b5855d
+  , 0x694c65d8a787d4bf, 0x7751857a7457a095, 0x6f3105502527639c
+  , 0x5985a463978a9811
+  ]
+```
+[GENERATED END]
+
+
+=== Task 21 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module that defines the given test vector record types and properties to verify HMAC-SHA-384 and its 192-bit truncation against the RFC 4868 section 2.7.1 and 2.7.2.2 test vectors, using an imported HMAC_SHA384 instantiation.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+import Hashing::HMAC::Instantiations::HMAC_SHA384
+
+property testsPass = all testsPassed
+where
+  testsPassed = [checkHMAC SHA384_2048]
+                # [checkHMAC SHA384_1920]
+
+type SHA384_2048 = {key = [256], msg = [2048], expected = [384]}
+type SHA384_1920 = {key = [1920], msg = [1920], expected = [384]}
+
+SHA384_2048 = {key = repeat (`A : [8]), msg = repeat (`B : [8]),
+                expected = 0x8D55E869A1D25147C6A91E4474C7565288F504062381309F31F8B0BC4F67B7488B3B3B7366E6C414C76954280151055}
+SHA384_1920 = {key = repeat (`A : [8]), msg = repeat (`B : [8]),
+                expected = 0x0547A6829857A1621C14558657E852A8B0671B1583617565D33E79002766633057A26E50A4572604C495806566D26195C681E7}
+
+checkHMAC : {k, m} (fin k, fin m) => SHA384_2048 -> Bit
+checkHMAC tv = hmacSHA384 k m == tv.expected
+  where
+    k = take `{k} tv.key
+    m = take `{m} tv.msg
+```
+[GENERATED END]
+
+
+=== Task 22 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define an interface module `Primitive::Symmetric::Cipher::Block::CipherInterface` with type synonyms `KeySize`, `BlockSize`, a finiteness constraint on both, and functions `encrypt` and `decrypt` of type `[KeySize] -> [BlockSize] -> [BlockSize]`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+interface module Primitive::Symmetric::Cipher::Block::CipherInterface where
+
+  type KeySize : #
+  type BlockSize : #
+  type constraint (fin KeySize, fin BlockSize)
+
+  encrypt : [KeySize] -> [BlockSize] -> [BlockSize]
+  decrypt : [KeySize] -> [BlockSize] -> [BlockSize]
+```
+[GENERATED END]
+
+
+=== Task 23 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Specify the CFB (Cipher Feedback) block cipher mode over an abstract block cipher interface, including encrypt and decrypt functions parameterized by segment size and a property encryptCorrect stating decrypt K IV (encrypt K IV Ps) == Ps for all keys, IVs, and plaintext segments.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Modes::CFB where
+
+import Primitive::Symmetric::Cipher::Block::Interface
+
+parameter
+  type S : #
+  type constraint (fin S, S >= 1)
+
+  type constraint (S <= 32, S <= width (BlockLen B))
+
+type EncKey = K
+
+encrypt : {n} (fin n, n >= 1) => EncKey -> [S] -> [n * S] -> [n * S]
+encrypt K iv ps =
+  join (map take cs')
+ where
+  cs = [iv] # [blockEncrypt K c | c <- cs']
+  cs' = split ps
+
+decrypt : {n} (fin n, n >= 1) => EncKey -> [S] -> [n * S] -> [n * S]
+decrypt K iv cs =
+  join (map take cs')
+ where
+  cs = [iv] # [blockEncrypt K c | c <- cs']
+  cs' = split cs
+
+property encryptCorrect K iv ps =
+  decrypt K iv (encrypt K iv ps) == ps
+```
+[GENERATED END]
+
+
+=== Task 24 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol module `Primitive::Symmetric::Cipher::Block::Simon::Instantiations::Simon128_128` that instantiates the generic Simon block cipher specification for the Simon-128/128 variant with type parameters `n = 64`, `m = 2`, `T = 68`, and `j = 2`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Simon::Instantiations::Simon128_128 =
+    Primitive::Symmetric::Cipher::Block::Simon::Specification where
+
+        type n = 64
+        type m = 2
+        type T = 68
+        type j = 2
+```
+[GENERATED END]
+
+
+=== Task 25 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module `Primitive::Symmetric::Cipher::Block::Simon::Instantiations::Simon128_256` instantiating the generic Simon block cipher specification for the Simon-128/256 variant with parameters `n=64`, `m=4`, `T=72`, and `j=4`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Simon::Instantiations::Simon128_256 =
+    Primitive::Symmetric::Cipher::Block::Simon::Specification where
+
+        type n = 64
+        type m = 4
+        type T = 72
+        type j = 4
+```
+[GENERATED END]
+
+
+=== Task 26 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module Primitive::Symmetric::Cipher::Block::Modes::Tests::AES256_CTR that imports Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_CTR and defines properties aes256_ctr_encrypt_vector and aes256_ctr_decrypt_vector checking AES-256 CTR encrypt/decrypt against the given NIST test vectors.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Modes::Tests::AES256_CTR where
+
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_CTR as AES256_CTR
+
+property aes256_ctr_encrypt_vector = ~zero == (join (map (AES256_CTR::encrypt (split k) (split n) (split bs)) [0..15]))
+  where
+    k = 0x8000000000000000000000000000000000000000000000000000000000000000
+    n = 0x00000000000000000000000000000000
+    bs = [
+      0x6bc1bee22e409f96e93d7e117393172a,
+      0xae2d8a571e03ac9c9eb76fac45af8e51,
+      0x30c81c46a35ce411e5fbc1191a0a52ef,
+      0xf69f2445df4f9b17ad2b417be66c3710,
+      0x72693098711a3141fc19cc290e6cf15b,
+      0x266ca7319d3966913d7cd65f4f67a9e5,
+      0x97112fe10d66a2e4370767fbc66bd19d,
+      0x6a2ca443d9af677bb40ed9994de796fb,
+      0x80000000000000000000000000000000,
+      0x80000000000000000000000000000000]
+
+property aes256_ctr_decrypt_vector = ~zero == (join (map (AES256_CTR::decrypt (split k) (split n) (split bs)) [0..15]))
+  where
+    k = 0x8000000000000000000000000000000000000000000000000000000000000000
+    n = 0x00000000000000000000000000000000
+    bs = [
+      0x6bc1bee22e409f96e93d7e117393172a,
+      0xae2d8a571e03ac9c9eb76fac45af8e51,
+      0x30c81c46a35ce411e5fbc1191a0a52ef,
+      0xf69f2445df4f9b17ad2b417be66c3710,
+      0x72693098711a3141fc19cc290e6cf15b,
+      0x266ca7319d3966913d7cd65f4f67a9e5,
+      0x97112fe10d66a2e4370767fbc66bd19d,
+      0x6a2ca443d9af677bb40ed9994de796fb,
+      0x80000000000000000000000000000000,
+      0x8000
+```
+[GENERATED END]
+
+
+=== Task 27 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol module `Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES192_CFB` that instantiates the generic CFB block cipher mode with the AES-192 block cipher implementation.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES192_CFB =
+    Primitive::Symmetric::Cipher::Block::Modes::CFB {
+        Primitive::Symmetric::Cipher::Block::AES::Instantiations::AES192
+    }
+```
+[GENERATED END]
+
+
+=== Task 28 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol module AES128_CFB that instantiates the generic CFB block cipher mode with AES-128, exposing the resulting AES-128 CFB encryption and decryption functions and any necessary types for keys, blocks, and IVs.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES128_CFB where
+
+import Primitive::Symmetric::Cipher::Block::Modes::CFB
+import Primitive::Symmetric::Cipher::Block::AES::Instantiations::AES128
+```
+[GENERATED END]
+
+
+=== Task 29 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Specify and verify in Cryptol the HostValues module’s heap-based host value store, including VecRepresentation and MapRepresentation constructors, allocation and lookup functions, and define a property that map_representation_equiv correctly characterizes when two MapRepresentation values are equivalent for a given element comparator and heap.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+module HostValues where
+
+import Array
+import Option
+import Values
+
+type VecRepresentation = { size : [64]
+                         , vec  : Array [64] (Option Value)
+                         }
+
+alloc_vec : {n} (fin n) => VecRepresentation -> Value -> VecRepresentation
+alloc_vec vec v = { size = old_size + 1, vec = old_vec }
+    where
+        old_size = vec.size
+        old_vec  = vec.vec
+        set_val = update old_vec old_size (some v)
+
+lookup_vec : {n} (fin n) => VecRepresentation -> [n] -> Option Value
+lookup_vec vec i = old_vec @ i
+    where
+        old_vec = vec.vec
+
+type MapRepresentation = { size : [64]
+                        , heap : Array [64] (Option (Value,[64]))
+                        }
+
+alloc_map : {n} (fin n) => MapRepresentation -> Value -> MapRepresentation
+alloc_map m v = { size = old_size + 1, heap = old_heap }
+    where
+        old_size = m.size
+        old_heap = m.heap
+        set_val = update old_heap old_size (some (v,old_size))
+
+lookup_map : {n} (fin n) => MapRepresentation -> Value -> Option ([64], Value)
+lookup_map m v = option (None,None) (lookup m' v)
+    where
+        m' = m.heap
+
+property map_representation_equiv cmp h1 h2 =
+    if equiv h1 h2 then True else False
+    where
+        equiv h1 h2 = h1 == h2 \/ (h1 == h3 /\ h2 == h3)
+            where h3 = alloc_map h1 (unit_value True)
+
+        lookup m v = option (None,None) (lookup_map m v)
+```
+[GENERATED END]
+
+
+=== Task 30 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification of the AES-128 S-box over GF(2^8), including gf28Mult, gf28Pow, gf28Inverse, aesAffine, aesSBox, the 16×16 aesSBoxTable, and a property cell00 asserting aesSBoxTable @ 0 @ 0 == 0x63.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type GF28 = [8]
+gf28Mult : (GF28, GF28) -> GF28
+gf28Mult (x, y) =
+  pmod (pmult x y)
+    <| x^^8 + x^^4 + x^^3 + x + 1 |>
+gf28Pow : (GF28, [8]) -> GF28
+gf28Pow (n, k) =
+  pow k
+  where
+    sq x = gf28Mult (x, x)
+    odd x = x ! 0
+    pow i =
+      if i == 0
+      then 1
+      else if odd i
+      then gf28Mult (n, sq (pow (i >> 1)))
+      else sq (pow (i >> 1))
+gf28Inverse : GF28 -> GF28
+gf28Inverse x = gf28Pow (x, 254)
+aesAffine : GF28 -> GF28
+aesAffine b =
+  b'
+  where
+    b' = gf28Mult (0x63, b)
+aesSBox : GF28 -> GF28
+aesSBox b = gf28Inverse (aesAffine b)
+aesSBoxTable = [[aesSBox x | x <- xs] | xs <- split [0 .. 255]]
+/* pragma cell00 : property */
+cell00 = aesSBoxTable @ 0 @ 0 == 0x63
+```
+[GENERATED END]
+
+
+=== Task 31 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the functions `usaf : [1][8] -> [10][8] -> [1][8]` and `saf : [1][8] -> [10][8] -> [1][8]` in Cryptol as given, and add a property that they are equal for all inputs `a` and `b` where `0 <= a@0 <= 9`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+usaf : [1][8] -> [10][8] -> [1][8]
+usaf a b = [(if (a@0 == 0) then (b@(0)) else (a@0))]
+
+saf : [1][8] -> [10][8] -> [1][8]
+saf a b = [(if ((a@0) < 10) then (b@(0)) else (a@0))]
+```
+[GENERATED END]
+
+
+=== Task 32 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines the given Circle/Displacement/BMI record types and functions (areaCircle, nudgeCircle, calcBMI, calcBMIimp), along with example constants, matching the behavior and types implied by the code excerpt.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Circle = { x : Float64, y : Float64, r : Float64 }
+
+areaCircle : Circle -> Float64
+areaCircle c = pi * c.r * c.r
+
+nudgeCircle : (Float64, Float64) -> Circle -> Circle
+nudgeCircle (dx, dy) c = { x = c.x + dx, y = c.y + dy, r = c.r }
+
+type Displacement = (Float64, Float64)
+
+type BMI = { weight : Float64, height : Float64 }
+
+calcBMI : BMI -> Float64
+calcBMI b = b.weight / (b.height * b.height)
+
+calcBMIimp : Float64 -> Float64 -> Float64
+calcBMIimp w h = w / (h * h)
+
+exCircle : Circle
+exCircle = { x = 0.0, y = 0.0, r = 1.0 }
+
+exNudge : Circle
+exNudge = nudgeCircle (1.0, 2.0) exCircle
+
+exBMI : BMI
+exBMI = { weight = 180.0, height = 72.0 }
+```
+[GENERATED END]
+
+
+=== Task 33 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification of ECDSA over the NIST P-384 curve, including functions for key initialization, signing, and public verification, plus properties that check the provided P-384 test vectors for point add/subtract/double, scalar multiplication, and twin multiplication.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+import Parameters
+import FieldExtras
+import ShortWeierstrassCurve as EC
+import KeylessECDSA
+
+private_key : Z 384
+private_key = 0x57b19b76e921f36377365c9785d9608f567719717168899523e06213a412194388297311689045990043366590573649497457831856646797302664624579473581766
+
+public_key : EC::AffinePoint
+public_key = init_public_key
+
+signature : (Z 384, Z 384)
+signature = (0x58298898237316809406485550819386438193494786349783853379394674444477909086747616073818636424651396968843895345319199,
+             0x27545352445999608815183596304776550419789546162664045979688581298019446483916250685061585897864688375719569899037374)
+
+init_private_key : Z 384
+init_private_key = private_key
+
+init_public_key : EC::AffinePoint
+init_public_key = EC::mult P_384 G private_key
+
+sign : {mLen} (fin mLen) => [mLen] -> (Z 384, Z 384)
+sign M =
+    if (r == 0) \/ (s == 0)
+    then sign M
+    else (r, s)
+    where
+        z = hash M
+        k : Z 384
+        k = random k' where k' = random k''
+        R = EC::mult P_384 G k
+        r = EC::affinex R
+        s = (z + r * init_private_key) % q
+
+verify : {mLen} (fin mLen) => [mLen] -> (Z 384, Z 384) -> EC::AffinePoint -> Bit
+verify M (r, s) Q =
+    if (r == 0) \/ (s == 0) \/ (r >= q) \/ (s >= q)
+    then False
+    else EC::is_point O ==> (r == EC::affinex R) /\ (Q == R)
+    where
+        z = hash M
+        w = inv s
+        u1 = z * w % q
+        u2 = r * w % q
+        R = EC::add P_384 (EC::mult P_384 G u1) (EC::mult P_384 Q u2)
+        O = EC::O P_384
+
+property tests = all (== True) [
+    EC::is_point (EC::add P_384 A B) == True,
+    EC::is_point (EC::sub P_384 A B) == True,
+    EC::is_point (EC::double P_384 A) == True,
+    EC::is_point (EC::mult P_384 G 0x123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef) == True,
+    EC::is_point (twin_mul P_384 0x123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef01234567
+```
+[GENERATED END]
+
+
+=== Task 34 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines the newtype CplxInt over Integer with complex addition, multiplication, equality, and properties cplxAddAssoc, cplxMulAssoc, and cplxMulDistrib verifying associativity of addition, associativity of multiplication, and left distributivity of multiplication over addition.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+newtype CplxInt = { real : Integer, imag : Integer }
+
+cplxAdd : CplxInt -> CplxInt -> CplxInt
+cplxAdd x y = CplxInt { real = x.real + y.real, imag = x.imag + y.imag }
+
+cplxEq : CplxInt -> CplxInt -> Bit
+cplxEq x y = x.real == y.real && x.imag == y.imag
+
+cplxAddAssoc : CplxInt -> CplxInt -> CplxInt -> Bit
+cplxAddAssoc x y z = cplxEq (cplxAdd x (cplxAdd y z)) (cplxAdd (cplxAdd x y) z)
+
+cplxMul : CplxInt -> CplxInt -> CplxInt
+cplxMul x y = CplxInt { real = x.real * y.real - x.imag * y.imag,
+                         imag = x.real * y.imag + x.imag * y.real }
+
+cplxMulAssoc : CplxInt -> CplxInt -> CplxInt -> Bit
+cplxMulAssoc x y z = cplxEq (cplxMul x (cplxMul y z)) (cplxMul (cplxMul x y) z)
+
+cplxMulDistrib : CplxInt -> CplxInt -> CplxInt -> Bit
+cplxMulDistrib x y z = cplxEq (cplxMul x (cplxAdd y z)) (cplxAdd (cplxMul x y) (cplxMul x z))
+```
+[GENERATED END]
+
+
+=== Task 35 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that includes the given tuple-based fold functions and a property `foldFunctionInverse` stating that `foldFunction' (foldFunction x y z) y z == x` for all 8-bit `x` and 16-bit `y`, `z`, suitable for formal verification.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+foldFunction : ([8], [16], [16]) -> [8]
+foldFunction (a, b, c) = a + ((b - c) >> 2)
+
+foldFunction' : ([8], [16], [16]) -> [8]
+foldFunction' (x, y, z) =
+  if (y >= z)
+  then foldFunction (x, y, z)
+  else foldFunction (x, z, y)
+
+property foldFunctionInverse x y z =
+  foldFunction' (foldFunction x y z) y z == x
+```
+[GENERATED END]
+
+
+=== Task 36 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines the AES-128 inverse MixColumns transformation over GF(2^8) using precomputed multiplication tables (for 0x0e, 0x0b, 0x0d, 0x09), including the types GF28, State, the helper functions gf28Mult, toBytes, fromBytes, and a function invMixColumns : State -> State matching the standard AES inverse MixColumns step.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type GF28 = [8]
+gf28Mult : (GF28, GF28) -> GF28
+gf28Mult (x, y) =
+  pmod (pmult x y)
+    0x1b
+toBytes : [32] -> [4][8]
+toBytes x = split (split x)
+fromBytes : [4][8] -> [32]
+fromBytes xs = join (join xs)
+type State = [4][4]GF28
+invMixColumns : State -> State
+invMixColumns state =
+  transpose
+    [fromBytes
+      [gf28Mult (0x0e, b) | b <- bytes]
+    | bytes <- toBytes state]
+```
+[GENERATED END]
+
+
+=== Task 37 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the Cryptol function `doRounds` and supporting types and functions (`Nb`, `State`, `RoundKey`, `addRoundKey`) as given, where `doRounds` iteratively applies a round function `rnd` over an initial key, a sequence of round keys, and a final key, and verify with a `property` that for any choice of `rnd`, initial key, round keys, final key, and input state, `doRounds` produces the same final state as computing the initial AddRoundKey followed by the same sequence of `rnd` applications unrolled explicitly.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+type Nb = 4
+
+type State = [4][Nb]Bit
+
+type RoundKey = State
+
+addRoundKey : {n} (fin n) => State -> [n]RoundKey -> State
+addRoundKey pt rks =
+  pt ^ (rks ! 0)
+
+doRounds : {n}
+  (fin n)
+  => (State -> RoundKey -> State) -> RoundKey -> [n]RoundKey -> RoundKey -> State -> State
+doRounds rnd k0 rks k1 st0 =
+  rks ! 0
+  where
+    states = [st0] # [rnd st rk | st <- states | rk <- rks]
+    st1 = states ! 0
+    st2 = states @ 1
+    st3 = states @ 2
+    st4 = states @ 3
+    st5 = states @ 4
+    st6 = states @ 5
+    st7 = states @ 6
+    st8 = states @ 7
+    st9 = states @ 8
+    st10 = states @ 9
+    st11 = states @ 10
+    st12 = states @ 11
+    st13 = states @ 12
+    st14 = states @ 13
+    st15 = states @ 14
+    st16 = states @ 15
+    st17 = states @ 16
+    st18 = states @ 17
+    st19 = states @ 18
+    st20 = states @ 19
+    st21 = states @ 20
+    st22 = states @ 21
+    st23 = states @ 22
+    st24 = states @ 23
+    st25 = states @ 24
+    st26 = states @ 25
+    st27 = states @ 26
+    st28 = states @ 27
+    st29 = states @ 28
+    st30 = states @ 29
+    st31 = states @ 30
+    st32 = states @ 31
+    st33 = states @ 32
+    st34 = states @ 33
+    st35 = states @ 34
+    st36 = states @ 35
+    st37 = states @ 36
+    st38 = states @ 37
+    st39 = states @ 38
+    st40 = states @ 39
+    st41 = states @ 40
+    st42 = states @ 41
+    st43 = states @ 42
+    st44 = states @ 43
+    st45 = states @ 44
+    st46 = states @ 45
+    st47 = states @ 46
+    st48 = states @ 47
+    st49 = states @ 48
+    st50 = states @ 49
+    st51 = states @ 50
+    st52 = states @ 51
+    st53 = states @ 52
+    st54 = states @ 53
+    st55 = states @ 54
+    st56 = states @ 55
+    st57 = states @ 56
+    st58 = states @ 57
+    st59 = states @ 58
+    st60 = states @ 59
+    st61 = states @ 60
+    st62 = states @ 61
+    st63 = states @ 62
+    st64 = states @ 63
+    st65 = states @ 64
+    st66 = states @ 65
+    st67 = states @ 66
+    st68 = states @ 67
+    st69 = states @ 68
+    st70 = states @ 69
+    st71 = states @ 70
+    st72 = states @ 71
+    st73 = states @ 72
+    st74 = states @ 73
+    st75 = states @ 74
+    st76 = states @ 75
+    st77 = states @ 76
+    st78 = states @ 77
+    st79 = states @ 78
+    st80 = states @ 79
+    st81 = states @ 80
+    st8
+```
+[GENERATED END]
+
+
+=== Task 38 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: In Cryptol, define the DES S-box 6 constant `sbox6 : [4][16][4]` with the given 4×16 table of 4-bit values exactly as specified here.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+sbox6 : [4][16][4]
+sbox6 =
+  [[12, 5, 4, 13, 1, 10, 0, 7, 6, 9, 8, 11, 3, 2, 15, 14],
+  [11, 8, 12, 0, 5, 2, 15, 13, 10, 14, 3, 6, 7, 1, 9, 4],
+  [7, 13, 10, 1, 0, 8, 9, 13, 12, 11, 14, 2, 6, 3, 4, 5],
+  [0, 14, 7, 11, 10, 4, 13, 1, 5, 8, 12, 6, 9, 3, 2, 15]]
+```
+[GENERATED END]
+
+
+=== Task 39 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines the DES block cipher as a value `DES : Cipher 64 64` (with `encrypt`/`decrypt` wired through the DES round function, key schedule, permutations, and S-boxes as in the NIST standard) and a property `testsPass` that checks `DES.encrypt` on given test message/key pairs matches the expected ciphertexts.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::DES
+
+property testsPass = and encryptions
+    where
+        encryptions =
+            [ DES.encrypt k m == c
+            | k <- ks
+            | m <- ms
+            | c <- cs
+            ]
+
+        ks =
+            [0x0123456789ABCDEF, 0x0123456789ABCDEF, 0x0123456789ABCDEF]
+        ms =
+            [
+                0x0000000000000000,
+                0x0102030405060708,
+                0x8000000000000000
+            ]
+        cs =
+            [
+                0x4A331E9B43C5E75F,
+                0x82428B9B752E5D04,
+                0x6B893665418B6603
+            ]
+```
+[GENERATED END]
+
+
+=== Task 40 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol property rfctest03 that verifies the given ChaCha20 stream cipher implementation (using qround, cdround, core, kexp, iround, stream, and encrypt over types Round, Block, Key, Nonce, and Counter) correctly encrypts the specified msg with the given key and counter to produce the expected out test vector.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+type Round = [16][32]
+type Block = [64][8]
+type Key = [32][8]
+type Nonce = [12][8]
+type Counter = [64][8]
+qround : ([32], [32], [32], [32]) -> ([32], [32], [32], [32])
+qround (a, b, c, d) =
+  (a + b, (a + b) ^ c, ((a + b) ^ c) >> 16, c ^ ((a + b) ^ c) >> 12)
+cdround : ([32], [32], [32], [32], [32], [32], [32], [32]) ->
+  ([32], [32], [32], [32], [32], [32], [32], [32])
+cdround (a, b, c, d, e, f, g, h) =
+  (a + b,
+   (a + b) ^ f,
+   ((a + b) ^ f) >> 16,
+   f ^ ((a + b) ^ f) >> 12,
+   g + h,
+   (g + h) ^ e,
+   ((g + h) ^ e) >> 8,
+   e ^ ((g + h) ^ e) >> 7,
+   a + b,
+   (a + b) ^ f,
+   ((a + b) ^ f) >> 16,
+   f ^ ((a + b) ^ f) >> 12,
+   g + h,
+   (g + h) ^ e,
+   ((g + h) ^ e) >> 8,
+   e ^ ((g + h) ^ e) >> 7)
+core : Round -> [16][32] -> Round
+core [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14,
+      x15] n =
+  [x0 + x12 | x0 <- x0s
+            | x12 <- x12s]
+  where
+    x0s =
+      [x0] # [x0' | x0 <- x0s | x0' <- take x12s [0, 4, 8, 12]]
+    x12s =
+      [x12] # [x12' | x12 <- x12s | x12' <- take x0s [0, 4, 8, 12]]
+iround : Round -> [16][32] -> Round
+iround r n =
+  [x0 + x12 | x0 <- x0s
+            | x12 <- x12s]
+  where
+    x0s =
+      [r @ 0] #
+      [x0' | x0 <- x0s
+            | x0' <- take (drop x12s 1) [0, 4, 8, 12]]
+    x12s =
+      [r @ 12] #
+      [x12' | x12 <- x12s
+             | x12' <- take (drop x0s 1) [0, 4, 8, 12]]
+kexp : Key -> Nonce -> Counter -> Round
+kexp k n c =
+  [c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14,
+   c15]
+  where
+    c0 = k @ 0
+    c1 = k @ 1
+    c2 = k @ 2
+    c3 = k @ 3
+    c4 = k @ 4
+    c5 = k @ 5
+    c6 = k @ 6
+    c7 = k @ 7
+    c8 = k @ 8
+    c9 = k @ 9
+    c10 = k @ 10
+    c11 = k @ 11
+    c12 = n @ 0
+    c13 = n @ 1
+    c14 = n @ 2
+    c15 = c
+stream : Round -> [16][Block]
+stream r =
+  [x | _ <- take`{16} [0, 1 ...
+```
+[GENERATED END]
+
+
+=== Task 41 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification of the ChaCha20 stream cipher with types Round = [16][32], Block = [64][8], Key = [32][8], Nonce = [12][8], Counter = [32], functions qround, cdround, kexp, iround, core, stream, encrypt, and a property rfctest02 that checks encrypt (zero # [1]) 1 (zero # [2]) msg equals the given RFC test vector out for the provided msg bytes.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+type Round = [16][32]
+type Block = [64][8]
+type Key = [32][8]
+type Nonce = [12][8]
+type Counter = [32]
+qround : [4]Round -> Round
+qround [a, b, c, d] =
+  [a + b,
+  (a + b) >>> 16,
+  c ^ d,
+  (c ^ d) << 12,
+  a + d,
+  (a + d) >>> 8,
+  b ^ c,
+  (b ^ c) << 7]
+cdround : [4]Round -> Round
+cdround [a, b, c, d] =
+  [a + b,
+  (a + b) >>> 12,
+  c ^ d,
+  (c ^ d) << 16,
+  a + d,
+  (a + d) >>> 5,
+  b ^ c,
+  (b ^ c) << 1]
+kexp : (Counter, Key, Nonce) -> Round
+kexp (i, k, n) =
+  [k @ 0,
+  k @ 1,
+  k @ 2,
+  k @ 3,
+  k @ 4,
+  k @ 5,
+  k @ 6,
+  k @ 7,
+  k @ 8,
+  k @ 9,
+  k @ 10,
+  k @ 11,
+  k @ 12,
+  k @ 13,
+  i + k @ 14,
+  n @ 0 + k @ 15,
+  n @ 1 + k @ 16,
+  n @ 2 + k @ 17,
+  n @ 3 + k @ 18,
+  n @ 4 + k @ 19,
+  n @ 5 + k @ 20,
+  n @ 6 + k @ 21,
+  n @ 7 + k @ 22,
+  n @ 8 + k @ 23,
+  n @ 9 + k @ 24,
+  n @ 10 + k @ 25,
+  n @ 11 + k @ 26,
+  n @ 12 + k @ 27,
+  i + k @ 28,
+  n @ 0 + k @ 29,
+  n @ 1 + k @ 30,
+  n @ 2 + k @ 31]
+iround : (Counter, Key, Nonce) -> Round -> Round
+iround (i, k, n) r =
+  [r ! 0,
+  r ! 1,
+  r ! 2,
+  r ! 3,
+  r ! 4,
+  r ! 5,
+  r ! 6,
+  r ! 7,
+  r ! 8,
+  r ! 9,
+  r ! 10,
+  r ! 11,
+  r ! 12,
+  r ! 13,
+  i + r ! 14,
+  n @ 0 + r ! 15,
+  n @ 1 + r ! 16,
+  n @ 2 + r ! 17,
+  n @ 3 + r ! 18,
+  n @ 4 + r ! 19,
+  n @ 5 + r ! 20,
+  n @ 6 + r ! 21,
+  n @ 7 + r ! 22,
+  n @ 8 + r ! 23,
+  n @ 9 + r ! 24,
+  n @ 10 + r ! 25,
+  n @ 11 + r ! 26,
+  i + r ! 27,
+  n @ 0 + r ! 28,
+  n @ 1 + r ! 29,
+  n @ 2 + r ! 30,
+  n @ 3 + r ! 31]
+core : (Counter, Key, Nonce) -> Round -> Round
+core (i, k, n) r =
+  foldl iround (foldl cdround r) (repeat (kexp (i, k, n)))
+stream : (Counter, Key, Nonce) -> Block
+stream (i, k, n) =
+  split
+    ((join
+        (core (i, k, n) (kexp (i, k, n)))) # zero) : [64][8]
+encrypt : (Counter, Key, Nonce) -> [64] -> [64] -> [64]
+encrypt (i, k, n) inblk outblk =
+  join
+    (
+```
+[GENERATED END]
+
+
+=== Task 42 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines the type AESTestVector 128 and the function mct_ecb_decrypt_128 : [128] -> [128] -> [100](AESTestVector 128) implementing the AES-128 Monte Carlo Test for ECB decryption using aesDecryptBlock and aes128DecryptSchedule from SuiteB, including generation of 100 test vectors from an initial key and ciphertext as described.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES128_ECB
+import Primitive::Symmetric::Cipher::Block::AES
+
+type AESTestVector n =
+  { key : [n]
+  , iv  : [128]
+  , pt  : [128]
+  , ct  : [128]
+  }
+
+mct_ecb_decrypt_128 : [128] -> [128] -> [100](AESTestVector 128)
+mct_ecb_decrypt_128 initialKey initialCt = testVectors
+  where
+    schedule = aes128DecryptSchedule initialKey
+    testVectors = [ vector i | i <- [ 0 ... 99 ] ]
+    vector i = { key   = initialKey
+               , iv  = zero
+               , pt  = aesDecryptBlock schedule ct'
+               , ct  = ct'
+               }
+             where
+               ct' = if i == 0 then initialCt else ct''
+               ct'' = ct
+```
+[GENERATED END]
+
+
+=== Task 43 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define in Cryptol the function `mct_ecb_decrypt_192 : [192] -> [128] -> [100](AESTestVector 192)` and any required types and helpers so that it models the AES-192 Monte Carlo Test for ECB decryption, producing 100 test vectors of key, plaintext, and ciphertext derived from iterative AES-192 decryption and key schedule updates.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::AES::Instantiations::AES192
+
+
+type AESTestVector n =
+    { Key : [n]
+    , Pt  : [128]
+    , Ct  : [128]
+    }
+
+mct_ecb_decrypt_192 : [192] -> [128] -> [100](AESTestVector 192)
+mct_ecb_decrypt_192 k0 p = vs
+    where
+        k  = split k0
+        ks = keySchedule k
+        vs = take `{100} (iterate decryptStep ({Key=k0, Pt=p, Ct=c}))
+
+decryptStep : {n} (fin n) => AESTestVector n -> AESTestVector n
+decryptStep v = {Key=ks@0, Pt=v.Ct, Ct=dec}
+
+c : [128]
+c = 0x33557799bbaaddccddeeff0011223344
+
+keySchedule : [6][32] -> [128]
+keySchedule ks = join (take `{4} ks) # join (drop `{4} ks)
+
+dec : [128] -> [128]
+dec = aes192Decrypt
+```
+[GENERATED END]
+
+
+=== Task 44 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define a Cryptol property tcId1069 that verifies the AES256_KeyWrap padded authenticated-encryption function KWP_AE, instantiated from Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_KeyWrap, maps the 8-bit plaintext 0xe0 under the 256-bit key 0x2644ccf9d7c419a437c954c8141cbb2d60f57de10a5393554a14ccc72229e286 to the ciphertext 0xda510b1d9a10255380655980a3a73536, using a helper predicate check_KWP_AE key pt expected_ct = KWP_AE key pt == expected_ct and asserting testPassed == check_KWP_AE key pt ct.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_KeyWrap
+
+
+check_KWP_AE key pt expected_ct = KWP_AE key pt == expected_ct
+/* pragma tcId1069 : property */
+tcId1069 =
+  testPassed == check_KWP_AE key pt ct
+  where
+    testPassed = True
+    key =
+      0x2644ccf9d7c419a437c954c8141cbb2d60f57de10a5393554a14ccc72229e286
+    pt = 0xe0
+    ct = 0xda510b1d9a10255380655980a3a73536
+```
+[GENERATED END]
+
+
+=== Task 45 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the property `tcId1080` that checks, for AES-256 Key Wrap with padding in AE mode, that encrypting the plaintext `0x06` under the key `0x3ea9325069ed93a96c331bdd6dd766ec64bbba83a72c69ed75df55043fb0bfd1` with `KWP_AE` produces the expected ciphertext `0x40a9c42012ba38211b800e6e313b6876`, using the helper `check_KWP_AE key pt expected_ct = KWP_AE key pt == expected_ct`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+import Primitive::Symmetric::Cipher::Block::Modes::Instantiations::AES256_KeyWrap
+
+
+check_KWP_AE key pt expected_ct = KWP_AE key pt == expected_ct
+/* pragma tcId1080 : property */
+tcId1080 =
+  testPassed == check_KWP_AE key pt ct
+  where
+    testPassed = True
+    key =
+      0x3ea9325069ed93a96c331bdd6dd766ec64bbba83a72c69ed75df55043fb0bfd1
+    pt = 0x06
+    ct = 0x40a9c42012ba38211b800e6e313b6876
+```
+[GENERATED END]
+
+
+=== Task 46 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Define the Cryptol function `pi16' : [16][64] -> [16][64]` that permutes a 16-word (64-bit each) Threefish state using the index order `[0, 15, 2, 11, 6, 13, 4, 9, 14, 1, 8, 5, 10, 3, 12, 7 : [4]]`, and add a property that this permutation is bijective (has an inverse).
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+pi16' : [16][64] -> [16][64]
+pi16' xs = xs @@ [0, 15, 2, 11, 6, 13, 4, 9, 14, 1, 8, 5, 10, 3, 12, 7 : [4]]
+```
+[GENERATED END]
+
+
+=== Task 47 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: In Cryptol, define the type alias `Dom n = {lo : [n], sz : [n]}` and the functions `interval : {n} (fin n) => [n] -> [n] -> Dom n` and `range : {n} (fin n) => [n] -> [n] -> Dom n` where `interval l s = {lo = l, sz = s}` and `range lo hi = interval lo (hi - lo)`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Dom n = {lo : [n], sz : [n]}
+interval : {n} (fin n) => [n] -> [n] -> Dom n
+interval l s = {lo = l, sz = s}
+range : {n} (fin n) => [n] -> [n] -> Dom n
+range lo hi = interval lo (hi - lo)
+```
+[GENERATED END]
+
+
+=== Task 48 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: In Cryptol, define the type alias `Dom n = {lo : [n], sz : [n]}`, the function `interval : {n} (fin n) => [n] -> [n] -> Dom n` with `interval l s = {lo = l, sz = s}`, and the constant `top : {n} (fin n) => Dom n` defined as `top = interval 0 (~0)`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Dom n = {lo : [n], sz : [n]}
+interval : {n} (fin n) => [n] -> [n] -> Dom n
+interval l s = {lo = l, sz = s}
+top : {n} (fin n) => Dom n
+top = interval 0 (~0)
+```
+[GENERATED END]
+
+
+=== Task 49 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol specification that defines the type `Dom n = {lo : [n], sz : [n]}`, the functions `mem : {n} (fin n) => Dom n -> [n] -> Bit`, `ubounds : {n} (fin n) => Dom n -> ([n], [n])`, `ule : {n} (fin n) => Dom n -> Dom n -> Bit`, the property `correct_ule : {n} (fin n, n >= 1) => Dom n -> Dom n -> [n] -> [n] -> Bit` expressing that `ule a b` implies `x <= y` for all `x` and `y` in the respective domains, and a property instance `o4 = correct_ule` specialized to `n = 16`.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Dom n = {lo : [n], sz : [n]}
+mem : {n} (fin n) => Dom n -> [n] -> Bit
+mem a x = x - a.lo <= a.sz
+ubounds : {n} (fin n) => Dom n -> ([n], [n])
+ubounds a =
+  if carry a.lo a.sz then (0, ~0) else (a.lo, a.lo + a.sz)
+ule : {n} (fin n) => Dom n -> Dom n -> Bit
+ule a b =
+  diff (ubounds b) (ubounds a) == (-1, 0) \/ (ubounds b).1 < (ubounds a).0
+correct_ule : {n}
+  (fin n, n >= 1) =>
+    Dom n -> Dom n -> [n] -> [n] -> Bit
+correct_ule a b x y =
+  ule a b ==> mem a x ==> mem b y ==> x <= y
+/* pragma o4 : property */
+o4 = correct_ule where
+  type n = 16
+```
+[GENERATED END]
+
+
+=== Task 50 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: In Cryptol, define the type `Dom n = {lo : [n], sz : [n]}`, functions `interval`, `singleton`, `neg`, `singleton_neg` as in the excerpt, and the property `i08` that asserts `singleton_neg` instantiated at width 16 (i.e., `singleton_neg`{16}) holds for all 16-bit inputs, suitable for verification with a solver.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+type Dom n = {lo : [n], sz : [n]}
+interval : {n} (fin n) => [n] -> [n] -> Dom n
+interval l s = {lo = l, sz = s}
+singleton : {n} (fin n) => [n] -> Dom n
+singleton x = interval x 0
+neg : {n} (fin n) => Dom n -> Dom n
+neg a =
+  if a.sz == 0 then
+    singleton (neg a.lo)
+  else
+    interval (neg (a.lo + a.sz)) a.sz
+singleton_neg : {n} (fin n) => [n] -> Bit
+property i08 = singleton_neg`{16}
+```
+[GENERATED END]
+
+
+=== Task 51 ===
+
+[PROMPT BEGIN]
+[SYSTEM]
+Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after).
+
+[USER]
+### Instruction:
+Write a Cryptol function that implements the tasks described below.
+
+### Request:
+Task: Write a Cryptol property `Salsa20_passes_tests` that checks the given Salsa20 core implementation (using `quarterround`, `rowround`, `columnround`, `doubleround`, `littleendian`, `littleendian_state`, `littleendian_state_inverse`, `Salsa20_rounds`, and `Salsa20 : [32] -> [64][8] -> [64][8]`) satisfies the three specified 20-round test vectors by equating its outputs to the provided 64-byte expected sequences and conjoining the results.
+
+
+[PROMPT END]
+
+[GENERATED BEGIN]
+```cryptol
+```cryptol
+quarterround : [4][32] -> [4][32]
+quarterround [y0, y1, y2, y3] =
+  [z0, z1, z2, z3]
+  where
+    z1 = y1 ^ ((y0 + y3) <<< 0x7)
+    z2 = y2 ^ ((z1 + y0) <<< 0x9)
+    z3 = y3 ^ ((z2 + z1) <<< 0xd)
+    z0 = y0 ^ ((z3 + z2) <<< 0x12)
+rowround : [16][32] -> [16][32]
+rowround
+  [y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14,
+   y15] =
+  [z0,
+  z1,
+  z2,
+  z3,
+  z4,
+  z5,
+  z6,
+  z7,
+  z8,
+  z9,
+  z10,
+  z11,
+  z12,
+  z13,
+  z14,
+  z15]
+  where
+    [z0, z1, z2, z3] = quarterround [y0, y1, y2, y3]
+    [z5, z6, z7, z4] = quarterround [y5, y6, y7, y4]
+    [z10, z11, z8, z9] = quarterround [y10, y11, y8, y9]
+    [z15, z12, z13, z14] = quarterround [y15, y12, y13, y14]
+columnround : [16][32] -> [16][32]
+columnround
+  [y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14,
+   y15] =
+  [z0,
+  z1,
+  z2,
+  z3,
+  z4,
+  z5,
+  z6,
+  z7,
+  z8,
+  z9,
+  z10,
+  z11,
+  z12,
+  z13,
+  z14,
+  z15]
+  where
+    [z4, z0, z11, z10] = quarterround [y4, y0, y11, y10]
+    [z8, z12, z9, z5] = quarterround [y8, y12, y9, y5]
+    [z6, z1, z13, z14] = quarterround [y6, y1, y13, y14]
+    [z2, z3, z15, z12] = quarterround [y2, y3, y15, y12]
+doubleround : [16][32] -> [16][32]
+doubleround y = columnround (rowround y)
+littleendian : {n} (fin n) => [n][8] -> [8 * n]
+littleendian xs = join (reverse xs)
+littleendian_state : [64][8] -> [16][32]
+littleendian_state xs =
+  [littleendian (xs @ i) | i <- [0, 1 ... 15]]
+littleendian_state_inverse : [16][32] -> [64][8]
+littleendian_state_inverse xs =
+  [split (littleendian (x # zero)) | x <- xs]
+Salsa20_rounds : [32] -> [64][8] -> [64][8]
+Salsa20_rounds n s =
+  littleendian_state_inverse (rounds @@ [(n - 1), (n - 2) ... 0])
+  where
+    rounds = iterate Salsa20_doubleround (littleendian_state s)
+Salsa20_doubleround : [16][32] -> [16][32]
+Salsa20_doubleround x = doubleround (doubleround x)
+Salsa20 : [32] -> [64][8] -> [64][8]
+Salsa20 n s = Salsa20_round
+```
+[GENERATED END]
+

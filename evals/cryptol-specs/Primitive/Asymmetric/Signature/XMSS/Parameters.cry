@@ -1,0 +1,22 @@
+interface module Primitive::Asymmetric::Signature::XMSS::Parameters where
+
+type h : #
+type constraint (fin h)
+
+type constraint (h <= 32)
+
+type constraint (h >= 1)
+
+type n : #
+type constraint (fin n)
+
+H : [n][8] -> [2 * n][8] -> [n][8]
+
+type MessageUpperBound : #
+
+type PaddingWidth : #
+
+oid : [32]
+
+H_msg : {m} (fin m, width (PaddingWidth + 8 * m) < MessageUpperBound)
+    => [3 * n][8] -> [m][8] -> [n][8]
