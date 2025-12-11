@@ -6,7 +6,17 @@ import sys
 import datetime
 from typing import Callable, Optional
 import pandas as pd
-from cryptol import Qed, Counterexample
+# ---------- Cryptol imports: safe for Colab ----------
+try:
+    import cryptol
+    from cryptol import Qed, Counterexample, BV
+    HAS_CRYPTOL = True
+except ImportError:
+    cryptol = None
+    Qed = None
+    Counterexample = None
+    BV = None
+    HAS_CRYPTOL = False
 
 result_file = ""
 
