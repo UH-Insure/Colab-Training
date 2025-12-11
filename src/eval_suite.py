@@ -1,10 +1,14 @@
 from dataclasses import dataclass
+from time import sleep, time
 import os
 import re
 import sys
 import datetime
 from typing import Callable, Optional
 import pandas as pd
+from cryptol import Qed, Counterexample
+
+result_file = ""
 
 MODEL_ALIASES = {
     "Qwen/Qwen3-Coder-30B-A3B-Instruct": "Qwen3-Coder-30B-A3B-Instruct",
@@ -18,7 +22,7 @@ class Config:
     SERVER_URL: str = "http://localhost:8080"          # Cryptol remote API
     MODEL_ID: str = "Qwen/Qwen3-Coder-30B-A3B-Instruct"
     TEMP_FILE: str = "/Users/josh/SecurityAnalytics/DataPreprocess/cryptol-files/generated.cry"       
-    CRYPTOL_PATH: str = "files/generated.cry"  # path inside Cryptol server container
+    CRYPTOL_PATH: str = "/home/cryptol/files/generated.cry"  # path inside Cryptol server container
     EVALS_PATH: str = "/Users/josh/SecurityAnalytics/DataPreprocess/src/eval/.data/evals.jsonl"
     RESULTS_FILE_PATH: str | None = None
     SYSTEM_PROMPT: str = "Return exactly ONE fenced code block labeled `cryptol` and nothing else (no prose before/after)."
@@ -39,6 +43,35 @@ Write a Cryptol property that tests the function described below.
 Task: {task}
 """
 
+def get_cryptol_snippet_for_task(task_id: int) -> str:
+    """
+    Given the full eval log text and a task_id, return the Cryptol code snippet
+    (inside ```cryptol fences) for that task.
+    """
+    global result_file
+    # 1) Extract the block for this specific task
+    task_pattern = re.compile(
+        rf"^=== Task {task_id}\s*===\s*(.*?)(?=^=== Task \d+ ===|\Z)",
+        re.MULTILINE | re.DOTALL,
+    )
+    m_task = task_pattern.search(result_file)
+    if not m_task:
+        raise ValueError(f"Task {task_id} block not found")
+
+    task_block = m_task.group(1)
+
+    # 2) Extract the ```cryptol ... ``` snippet from that block
+    cryptol_pattern = re.compile(
+        r"```cryptol\s*(.*?)```",
+        re.DOTALL | re.IGNORECASE,
+    )
+    m_code = cryptol_pattern.search(task_block)
+    if not m_code:
+        raise ValueError(f"No ```cryptol``` block found for task {task_id}")
+
+    return m_code.group(0).strip() 
+   
+
 # ------------------ Helpers -------------------------
 def extract_code_block(text: str) -> str:
     """
@@ -48,37 +81,35 @@ def extract_code_block(text: str) -> str:
     m = re.search(r"```(?:cryptol)?\s*(.*?)```", text, flags=re.S | re.I)
     return (m.group(1) if m else text).strip()
 
-def run_assert(test_src: str, ns: dict) -> tuple[bool, str]:
-    """
-    Execute a single assert string. Returns (ok, message).
-    """
-    try:
-        exec(test_src, ns)
-        return True, "OK"
-    except AssertionError as e:
-        return False, f"AssertionError: {e}"
-    except Exception as e:
-        return False, f"Error: {e}"
-
-def execute_test_code(source_code: str, tests: list[str]) -> tuple[bool, str]:
+def execute_test_code(source_code: str, tests: list[str], type: str = "function") -> tuple[bool, str]:
         import cryptol
         from cryptol import BV
         result_ = f"[GENERATE BEGIN]\n```cryptol\n{source_code}\n```\n[GENERATE END]\n\n"
         try:
             with open(config.TEMP_FILE, "w") as f:
                 f.write(source_code)
+                f.flush()
+                os.fsync(f.fileno())
+            #sleep(1)  # Give time for file to be written
             print(f"[INFO] Wrote generated Cryptol to {config.TEMP_FILE} (overwritten).")
         except Exception as e:
-            result_ += f"[ERROR] Writing temp file failed: {e}"
+            result_ += f"[ERROR] Writing temp file failed"
             print(result_)
             return False, f"{result_}\n"
             
     # -------- Cryptol: load & test --------
         try:
             cry = cryptol.connect(url=config.SERVER_URL, reset_server=True)
-            cry.load_file(config.CRYPTOL_PATH)
+            for attempt in range(3):
+                try:
+                    cry.load_file(config.CRYPTOL_PATH).result()
+                    break
+                except Exception as e:
+                    if attempt == 2:
+                        raise  # re-raise after final attempt
+                time.sleep(0.25)
         except Exception as e:
-            result_ += f"[ERROR] Cryptol load failed: {e}"
+            result_ += f"[ERROR] Cryptol load failed"
             print(result_)
             # Try to close/reset and move on
             try:
@@ -92,7 +123,31 @@ def execute_test_code(source_code: str, tests: list[str]) -> tuple[bool, str]:
         # Run tests
         all_ok = True
         for i, test_src in enumerate(tests, 1):
-            ok, msg = run_assert(test_src, ns)
+            ok = False
+            msg = ""
+            try:
+                if type == "function":
+                    print(f"cryptol: {test_src['cryptol']}")
+                    print(f"expected: {test_src['expected']}")
+                    res = cry.eval_f(str(test_src["cryptol"])).result()
+                    expected_res = cry.eval_f(str(test_src["expected"])).result()
+                    assert res == expected_res
+                    ok = True
+                    msg = "OK"
+                elif type == "property":
+                    proof_future = cry.prove_f(test_src["cryptol"])  # equivalent is a Cryptol property
+                    proof = proof_future.result()
+                    if isinstance(proof, Qed):
+                        ok = True
+                        msg = "OK"
+            except AssertionError as e:
+                ok = False
+                msg = f"AssertionError"
+                
+            except Exception as e:
+                ok = False
+                msg = f"General Error"
+
             all_ok &= ok
             status = "PASS" if ok else "FAIL"
             result_ += f"  [{status}] test {i}: {msg}\n"
@@ -109,7 +164,8 @@ def run_eval_suite(
         config: Config, 
         execute: bool,
         generate_fn: Optional[Callable[[str], str]] = None, 
-        provider: str = "nebius"
+        provider: str = "nebius",
+        local: bool = False,
     ) -> None:
     """
     Run the eval suite given by eval_df.
@@ -169,7 +225,9 @@ def run_eval_suite(
         # -------- Inference --------
         try:
             if generate_fn is not None:
-                content = generate_fn(messages)
+                content = generate_fn(
+                    messages if not local else task_id
+                )
             else:
                 completion = client.chat.completions.create(
                     model=config.MODEL_ID,
@@ -192,7 +250,7 @@ def run_eval_suite(
 
         if execute:
             attempts += 1
-            all_ok, result_ = execute_test_code(source_code, tests)
+            all_ok, result_ = execute_test_code(source_code, tests, type=type)
             if all_ok:
                 successful_attempts += 1
             result_ += f"[RESULT] Task {task_id}: {'ALL PASS' if all_ok else 'HAS FAILURES'}\n"
@@ -218,6 +276,7 @@ def run_eval_suite(
         print(f"Wrote eval results to {config.RESULTS_FILE_PATH}.")
 
 if __name__ == "__main__":
+    '''
     start_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
     model = "Qwen/Qwen2.5-Coder-7B"
     config = Config(
@@ -225,5 +284,20 @@ if __name__ == "__main__":
         EVALS_PATH="/Users/josh/SecurityAnalytics/Colab-Training/data/evals.jsonl",
         RESULTS_FILE_PATH=f"/Users/josh/SecurityAnalytics/Colab-Training/results/{MODEL_ALIASES[model]}_eval_{start_time}.txt",
     )
+    '''
+    file_name = sys.argv[1] if len(sys.argv) > 1 else ""
+    config = Config(
+        MODEL_ID="Qwen/Qwen2.5-Coder-7B",
+        EVALS_PATH="data/evals.jsonl",
+        RESULTS_FILE_PATH=f"{''.join(file_name.split('.')[:-1])}_results.txt" if file_name else None,
+    )
+    with open(file_name, "r") as f:
+        result_file = f.read()
     eval_df = pd.read_json(config.EVALS_PATH, lines=True)
-    run_eval_suite(eval_df, config, True)
+    run_eval_suite(
+        eval_df,
+        config,
+        True,
+        generate_fn=get_cryptol_snippet_for_task,
+        local=True,
+    )
